@@ -8,12 +8,16 @@ import { routeFromHash } from './lib/routing'
 import { ApiPage } from './pages/ApiPage'
 import { GuidePage } from './pages/GuidePage'
 import { HeaderCataloguePage } from './pages/HeaderCataloguePage'
+import { LocaleContext, makeLocaleValue } from './i18n/LocaleContext'
+import type { Locale } from './i18n/translations'
+import { translate } from './i18n/translations'
 
 function App() {
   const [route, setRoute] = useState(routeFromHash)
   const [query, setQuery] = useState('')
   const [mobileOpen, setMobileOpen] = useState(false)
   const [apiFilter, setApiFilter] = useState('')
+  const [locale, setLocale] = useState<Locale>(() => localStorage.getItem('duality-docs-locale') === 'vi' ? 'vi' : 'en')
 
   useEffect(() => {
     const onHashChange = () => {
@@ -34,12 +38,14 @@ function App() {
       ? <HeaderCataloguePage filter={apiFilter} />
       : <ApiPage entry={api} />
 
-  return <div className="app-shell">
+  useEffect(() => { localStorage.setItem('duality-docs-locale', locale) }, [locale])
+
+  return <LocaleContext.Provider value={makeLocaleValue(locale, setLocale)}><div className="app-shell">
     <SiteHeader mode={route.mode} query={query} mobileOpen={mobileOpen} onQueryChange={setQuery} onToggleMenu={() => setMobileOpen((open) => !open)} />
     <DocsSidebar route={route} mobileOpen={mobileOpen} apiFilter={apiFilter} onApiFilterChange={setApiFilter} />
     <main>{content}</main>
-    <footer><span>Duality Engine documentation</span><span>Engine headers are the final authority · 3DS APIs are versioned with devkitPro</span></footer>
-  </div>
+    <footer><span>{translate('Duality Engine documentation', locale)}</span><span>{translate('Engine headers are the final authority · 3DS APIs are versioned with devkitPro', locale)}</span></footer>
+  </div></LocaleContext.Provider>
 }
 
 export default App

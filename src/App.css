@@ -18,3 +18,11 @@ footer { grid-column: 1 / -1; display: flex; justify-content: space-between; ali
 .sidebar button svg { margin-right: 6px; vertical-align: -2px; }
 .references a { align-items: center; }
 .source-file { display: inline-flex; align-items: center; gap: 5px; }
+
+.locale-switch { display: flex; overflow: hidden; border: 1px solid #2a3c5b; border-radius: 7px; background: #0e1729; }
+.locale-switch button { border: 0; padding: 5px 7px; color: #90a1ba; font-size: 11px; font-weight: 750; background: transparent; }
+.locale-switch button.selected, .locale-switch button:hover { color: #eaf7ff; background: #244b6c; }
+.article-body h2 { margin: 46px 0 12px; padding-top: 8px; border-top: 1px solid #263852; color: #e7f3ff; font-size: 25px; line-height: 1.25; }
+.article-body h2:first-child { margin-top: 0; }
+.catalogue-symbols { display: grid; gap: 5px; margin-top: 10px; }
+.catalogue-symbols code { width: fit-content; max-width: 100%; overflow-wrap: anywhere; }

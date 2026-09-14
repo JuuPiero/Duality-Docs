@@ -5,39 +5,40 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
     "path": "DualityEngine/Include/DualityEngine/Asset/AssetDatabase.h",
     "symbols": [
       "AssetDatabase",
-      "Refresh()",
-      "Register()",
-      "LoadManifest()",
-      "ResolvePath()"
+      "static void Refresh(const std::string& rootDirectory)",
+      "static void Register(const std::string& guid, const std::string& path)",
+      "static void LoadManifest(const std::string& manifestPath)",
+      "static std::string ResolvePath(const std::string& guid)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Asset/AssetMeta.h",
     "symbols": [
       "AssetMeta",
-      "EnsureMetaFile()"
+      "static std::string EnsureMetaFile(const std::filesystem::path& assetPath)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Asset/AudioImportSettings.h",
     "symbols": [
       "AudioImportSettings",
-      "Load()",
-      "Save()"
+      "static AudioImportSettings Load(const std::string& assetPath)",
+      "static bool Save(const std::string& assetPath, const AudioImportSettings& settings)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Asset/Material.h",
     "symbols": [
-      "Material"
+      "Material",
+      "static std::vector<FieldHandle> Fields()"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Asset/MaterialLoader.h",
     "symbols": [
       "MaterialLoader",
-      "Load()",
-      "Save()"
+      "static Material Load(const std::string& path)",
+      "static bool Save(const std::string& path, const Material& material)"
     ]
   },
   {
@@ -46,21 +47,22 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
       "MeshData",
       "SubMesh",
       "MeshLoader",
-      "Load()"
+      "static const MeshData& Load(const std::string& path)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Asset/PhysicsMaterial.h",
     "symbols": [
-      "PhysicsMaterial"
+      "PhysicsMaterial",
+      "static std::vector<FieldHandle> Fields()"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Asset/PhysicsMaterialLoader.h",
     "symbols": [
       "PhysicsMaterialLoader",
-      "Load()",
-      "Save()"
+      "static PhysicsMaterial Load(const std::string& path)",
+      "static void Save(const std::string& path, const PhysicsMaterial& material)"
     ]
   },
   {
@@ -68,10 +70,10 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
     "symbols": [
       "ScriptableObjectLoader",
       "Loaded",
-      "Load()",
-      "Save()",
-      "Create()",
-      "UnloadAll()"
+      "static Loaded Load(const std::string& path)",
+      "static bool Save(const std::string& path, const std::string& className, ScriptableObject* instance)",
+      "static Loaded Create(const std::string& path, const std::string& className)",
+      "static void UnloadAll()"
     ]
   },
   {
@@ -80,36 +82,37 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
       "TextureFilterMode",
       "TextureWrapMode",
       "TextureImportSettings",
-      "Load()",
-      "Save()"
+      "static TextureImportSettings Load(const std::string& assetPath)",
+      "static bool Save(const std::string& assetPath, const TextureImportSettings& settings)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Audio/AudioEngine.h",
     "symbols": [
       "AudioEngine",
-      "Init()",
-      "Shutdown()",
-      "Update()",
-      "Play()",
-      "Stop()",
-      "StopAll()",
-      "SetVolume()",
-      "SetPaused()",
-      "IsPlaying()"
+      "static void Init()",
+      "static void Shutdown()",
+      "static void Update()",
+      "static AudioHandle Play(const std::string& path, bool loop, float volume = 1.0f)",
+      "static void Stop(AudioHandle handle)",
+      "static void StopAll()",
+      "static void SetVolume(AudioHandle handle, float volume)",
+      "static void SetPaused(AudioHandle handle, bool paused)",
+      "static bool IsPlaying(AudioHandle handle)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Audio/WavLoader.h",
     "symbols": [
       "WavData",
-      "LoadWavFile()"
+      "bool LoadWavFile(const std::string& path, WavData& outData)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Core/DateTime.h",
     "symbols": [
-      "DateTime"
+      "DateTime",
+      "static DateTime Now()"
     ]
   },
   {
@@ -118,24 +121,40 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
       "LogLevel",
       "LogEntry",
       "Log",
-      "Trace()",
-      "Info()",
-      "Warn()",
-      "Error()",
-      "lock()",
-      "Push()"
+      "static void Trace(const std::string& message)",
+      "static void Info(const std::string& message)",
+      "static void Warn(const std::string& message)",
+      "static void Error(const std::string& message)",
+      "static std::deque<LogEntry> GetEntries()",
+      "std::lock_guard<std::mutex> lock(s_Mutex)",
+      "static void Clear()",
+      "static void Push(LogLevel level, const std::string& message)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Core/Mathf.h",
     "symbols": [
-      "Mathf"
+      "Mathf",
+      "static float Clamp(float value, float minimum, float maximum)",
+      "static float Clamp01(float value)",
+      "static float Lerp(float a, float b, float t)",
+      "static float LerpUnclamped(float a, float b, float t)",
+      "static float MoveTowards(float current, float target, float maxDelta)",
+      "static float Repeat(float value, float length)",
+      "static float PingPong(float value, float length)",
+      "static bool Approximately(float a, float b)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Core/Random.h",
     "symbols": [
-      "Random"
+      "Random",
+      "static void Seed(uint32_t seed)",
+      "static uint32_t NextUInt()",
+      "static float Value()",
+      "static int Range(int minimumInclusive, int maximumExclusive)",
+      "static float Range(float minimumInclusive, float maximumInclusive)",
+      "static uint32_t& State()"
     ]
   },
   {
@@ -143,42 +162,52 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
     "symbols": [
       "Scene",
       "Entity",
-      "AddComponent()",
-      "GetComponent()",
-      "HasComponent()",
-      "IsValid()",
-      "TryGetComponent()",
-      "RemoveComponent()",
-      "GetParent()",
-      "GetChildren()",
-      "ClearChildren()",
-      "GetComponentInChildren()",
-      "GetComponentInParent()"
+      "T& AddComponent(Args&&... args)",
+      "T& GetComponent()",
+      "const T& GetComponent() const",
+      "bool HasComponent() const",
+      "bool IsValid() const",
+      "T* TryGetComponent()",
+      "const T* TryGetComponent() const",
+      "void RemoveComponent()",
+      "Entity GetParent() const",
+      "std::vector<Entity> GetChildren() const",
+      "void ClearChildren()",
+      "T* GetComponentInChildren(bool includeSelf = true)",
+      "const T* GetComponentInChildren(bool includeSelf = true) const",
+      "T* GetComponentInParent(bool includeSelf = true)",
+      "const T* GetComponentInParent(bool includeSelf = true) const",
+      "entt::entity Handle() const",
+      "Scene* GetScene() const",
+      "operator bool() const"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/IO/SaveSystem.h",
     "symbols": [
       "SaveSystem",
-      "file()"
+      "static bool SaveJson(const std::string& path, const nlohmann::json& data)",
+      "std::ofstream file(path)",
+      "static nlohmann::json LoadJson(const std::string& path)",
+      "std::ifstream file(path)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Input/InputManager.h",
     "symbols": [
       "InputManager",
-      "GetKey()",
-      "GetKeyDown()",
-      "GetKeyUp()",
-      "GetAxis()",
-      "GetPointerDown()",
-      "GetPointerUp()",
-      "GetPointerPosition()",
-      "GetPointerScreen()",
-      "BeginFrame()",
-      "SetKeyState()",
-      "SetAxis()",
-      "SetPointer()"
+      "static bool GetKey(KeyCode key)",
+      "static bool GetKeyDown(KeyCode key)",
+      "static bool GetKeyUp(KeyCode key)",
+      "static float GetAxis(const std::string& axisName)",
+      "static bool GetPointerDown()",
+      "static bool GetPointerUp()",
+      "static glm::vec2 GetPointerPosition()",
+      "static Screen GetPointerScreen()",
+      "static void BeginFrame()",
+      "static void SetKeyState(KeyCode key, bool isDown)",
+      "static void SetAxis(const std::string& axisName, float value)",
+      "static void SetPointer(bool isDown, const glm::vec2& position, Screen screen)"
     ]
   },
   {
@@ -197,19 +226,20 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
     "path": "DualityEngine/Include/DualityEngine/Physics/PhysicsUnits.h",
     "symbols": [
       "PhysicsUnits",
-      "PPU()",
-      "Gravity()",
-      "PhysicsGravity()",
-      "ToPhysics()",
-      "ToWorld()",
-      "SetRuntimeOverride()"
+      "static float PPU()",
+      "static float Gravity()",
+      "static float PhysicsGravity()",
+      "static float ToPhysics(float worldUnits)",
+      "static float ToWorld(float physicsUnits)",
+      "static void SetRuntimeOverride(float ppu, float gravity)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Physics/RaycastHit.h",
     "symbols": [
       "RaycastHit2D",
-      "RaycastHit3D"
+      "RaycastHit3D",
+      "operator bool() const"
     ]
   },
   {
@@ -217,12 +247,19 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
     "symbols": [
       "ProjectConfig",
       "Project",
-      "New()",
-      "Load()",
-      "Save()",
-      "GetStartScenePath()",
-      "GetEnabledPackagesCsv()",
-      "GetScriptingDefinesCsv()"
+      "static std::shared_ptr<Project> New(const std::string& directory, const std::string& name)",
+      "static std::shared_ptr<Project> Load(const std::string& projectFilePath)",
+      "bool Save()",
+      "static std::shared_ptr<Project> GetActive()",
+      "const std::string& GetDirectory() const",
+      "std::string GetAssetsDirectory() const",
+      "std::string GetScriptsDirectory() const",
+      "std::string GetPackagesDirectory() const",
+      "std::string GetStartScenePath() const",
+      "std::string GetEnabledPackagesCsv() const",
+      "std::string GetScriptingDefinesCsv() const",
+      "ProjectConfig& GetConfig()",
+      "const ProjectConfig& GetConfig() const"
     ]
   },
   {
@@ -234,14 +271,17 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
       "NestedFieldValue",
       "EnumFieldValue",
       "FieldHandle",
-      "FieldValue()"
+      "FieldHandle MakeField(const std::string& name, T C::* member)",
+      "FieldHandle MakeColorField(const std::string& name, glm::vec4 C::* member)",
+      "FieldHandle MakeNestedField(const std::string& name, T C::* member)",
+      "FieldHandle MakeEnumField(const std::string& name, T C::* member, std::vector<std::string> options)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Reflection/FieldSerialization.h",
     "symbols": [
-      "FieldValueToJson()",
-      "JsonToFieldValue()"
+      "json FieldValueToJson(const FieldValue& value)",
+      "FieldValue JsonToFieldValue(const json& j, const FieldValue& prototype)"
     ]
   },
   {
@@ -251,7 +291,7 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
   {
     "path": "DualityEngine/Include/DualityEngine/Reflection/Reflection.h",
     "symbols": [
-      "RegisterBuiltinComponents()"
+      "void RegisterBuiltinComponents()"
     ]
   },
   {
@@ -259,8 +299,9 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
     "symbols": [
       "ComponentTypeInfo",
       "TypeRegistry",
-      "All()",
-      "Find()"
+      "static std::vector<ComponentTypeInfo>& All()",
+      "static ComponentTypeInfo* Find(const std::string& displayName)",
+      "static void Register(const std::string& displayName, bool mandatory, std::vector<FieldHandle> fields)"
     ]
   },
   {
@@ -274,46 +315,44 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
     "symbols": [
       "IRenderer2D",
       "Scene",
-      "DrawSpriteQuad()",
-      "DrawNineSlice()",
-      "DrawLineStrip2D()"
+      "void DrawLineStrip2D(IRenderer2D& renderer, const glm::vec2* points, int count, float width, const glm::vec4& color, bool loop)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Renderer/IRenderer2D.h",
     "symbols": [
       "IRenderer2D",
-      "Init()",
-      "Shutdown()",
-      "BeginFrame()",
-      "EndFrame()",
-      "BeginScene()",
-      "EndScene()",
-      "DrawQuad()",
-      "DrawText()",
-      "MeasureText()",
-      "LoadFont()",
-      "LoadTexture()",
-      "UnloadAllTextures()",
-      "UnloadAllFonts()",
-      "GetDrawCallCount()"
+      "virtual void Init() = 0",
+      "virtual void Shutdown() = 0",
+      "virtual void BeginFrame() = 0",
+      "virtual void EndFrame() = 0",
+      "virtual void BeginScene(Screen screen, const glm::vec4& clearColor, bool clear = true) = 0",
+      "virtual void EndScene() = 0",
+      "virtual void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color, float rotationDegrees = 0.0f, uint32_t textureId = 0, const glm::vec4& uvRect = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)) = 0",
+      "virtual void DrawText(const std::string& text, const glm::vec2& position, float fontSize, const glm::vec4& color, uint32_t fontId = 0) = 0",
+      "virtual glm::vec2 MeasureText(const std::string& text, float fontSize, uint32_t fontId = 0) = 0",
+      "virtual uint32_t LoadFont(const std::string& path) = 0",
+      "virtual uint32_t LoadTexture(const std::string& path) = 0",
+      "virtual void UnloadAllTextures() = 0",
+      "virtual void UnloadAllFonts() = 0",
+      "virtual uint32_t GetDrawCallCount() const = 0"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Renderer/IRenderer3D.h",
     "symbols": [
       "IRenderer3D",
-      "Init()",
-      "Shutdown()",
-      "BeginScene()",
-      "EndScene()",
-      "DrawMesh()",
-      "GetSubMeshCount()",
-      "LoadTexture()",
-      "LoadMesh()",
-      "UnloadAllTextures()",
-      "UnloadAllMeshes()",
-      "GetDrawCallCount()"
+      "virtual void Init() = 0",
+      "virtual void Shutdown() = 0",
+      "virtual void BeginScene(Screen screen, ProjectionType projection, const glm::vec3& cameraPosition, const glm::vec3& cameraRotationDegrees, float fovDegrees, float orthoHalfHeight, float aspectRatio, float nearPlane, float farPlane, const glm::vec4& clearColor, bool clear = true) = 0",
+      "virtual void EndScene() = 0",
+      "virtual void DrawMesh(MeshPrimitive primitive, uint32_t meshHandle, uint32_t subMeshIndex, const glm::vec3& translation, const glm::vec3& rotationDegrees, const glm::vec3& scale, const glm::vec4& color, uint32_t textureId = 0) = 0",
+      "virtual uint32_t GetSubMeshCount(uint32_t meshHandle) const = 0",
+      "virtual uint32_t LoadTexture(const std::string& path) = 0",
+      "virtual uint32_t LoadMesh(const std::string& path) = 0",
+      "virtual void UnloadAllTextures() = 0",
+      "virtual void UnloadAllMeshes() = 0",
+      "virtual uint32_t GetDrawCallCount() const = 0"
     ]
   },
   {
@@ -326,20 +365,23 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
     "path": "DualityEngine/Include/DualityEngine/Renderer/N3DS/Citro2DRenderer.h",
     "symbols": [
       "Citro2DRenderer",
-      "Init()",
-      "Shutdown()",
-      "BeginFrame()",
-      "EndFrame()",
-      "BeginScene()",
-      "EndScene()",
-      "DrawQuad()",
-      "DrawText()",
-      "MeasureText()",
-      "LoadFont()",
-      "UnloadAllFonts()",
-      "LoadTexture()",
-      "UnloadAllTextures()",
-      "TargetFor()"
+      "void Init() override",
+      "void Init(int antiAliasingMode)",
+      "void Shutdown() override",
+      "void BeginFrame() override",
+      "void EndFrame() override",
+      "void BeginScene(Screen screen, const glm::vec4& clearColor, bool clear) override",
+      "void EndScene() override",
+      "void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color, float rotationDegrees = 0.0f, uint32_t textureId = 0, const glm::vec4& uvRect = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)) override",
+      "void DrawText(const std::string& text, const glm::vec2& position, float fontSize, const glm::vec4& color, uint32_t fontId = 0) override",
+      "glm::vec2 MeasureText(const std::string& text, float fontSize, uint32_t fontId = 0) override",
+      "uint32_t LoadFont(const std::string& path) override",
+      "void UnloadAllFonts() override",
+      "uint32_t LoadTexture(const std::string& path) override",
+      "void UnloadAllTextures() override",
+      "uint32_t GetDrawCallCount() const override",
+      "C3D_RenderTarget* GetTarget(Screen screen) const",
+      "C3D_RenderTarget* TargetFor(Screen screen) const"
     ]
   },
   {
@@ -347,18 +389,19 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
     "symbols": [
       "Citro3DRenderer",
       "PrimitiveGpuMesh",
-      "Init()",
-      "Shutdown()",
-      "SetScreenTargets()",
-      "BeginScene()",
-      "EndScene()",
-      "DrawMesh()",
-      "GetSubMeshCount()",
-      "LoadTexture()",
-      "LoadMesh()",
-      "UnloadAllTextures()",
-      "UnloadAllMeshes()",
-      "TargetFor()"
+      "void Init() override",
+      "void Shutdown() override",
+      "void SetScreenTargets(C3D_RenderTarget* top, C3D_RenderTarget* bottom)",
+      "void BeginScene(Screen screen, ProjectionType projection, const glm::vec3& cameraPosition, const glm::vec3& cameraRotationDegrees, float fovDegrees, float orthoHalfHeight, float aspectRatio, float nearPlane, float farPlane, const glm::vec4& clearColor, bool clear) override",
+      "void EndScene() override",
+      "void DrawMesh(MeshPrimitive primitive, uint32_t meshHandle, uint32_t subMeshIndex, const glm::vec3& translation, const glm::vec3& rotationDegrees, const glm::vec3& scale, const glm::vec4& color, uint32_t textureId = 0) override",
+      "uint32_t GetSubMeshCount(uint32_t meshHandle) const override",
+      "uint32_t LoadTexture(const std::string& path) override",
+      "uint32_t LoadMesh(const std::string& path) override",
+      "void UnloadAllTextures() override",
+      "void UnloadAllMeshes() override",
+      "uint32_t GetDrawCallCount() const override",
+      "C3D_RenderTarget* TargetFor(Screen screen) const"
     ]
   },
   {
@@ -366,22 +409,22 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
     "symbols": [
       "GLFont",
       "GLFontLoader",
-      "LoadFontFromFile()"
+      "static GLFont LoadFontFromFile(const std::string& path)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Renderer/OpenGL/GLShaderProgram.h",
     "symbols": [
       "GLShaderProgram",
-      "Init()",
-      "Shutdown()",
-      "Bind()",
-      "Unbind()",
-      "GetUniformLocation()",
-      "GetAttribLocation()",
-      "SetUniformMat4()",
-      "SetUniformVec4()",
-      "SetUniformInt()"
+      "void Init(const char* vertexSource, const char* fragmentSource)",
+      "void Shutdown()",
+      "void Bind() const",
+      "void Unbind() const",
+      "int GetUniformLocation(const char* name) const",
+      "int GetAttribLocation(const char* name) const",
+      "void SetUniformMat4(int location, const glm::mat4& value) const",
+      "void SetUniformVec4(int location, const glm::vec4& value) const",
+      "void SetUniformInt(int location, int value) const"
     ]
   },
   {
@@ -394,58 +437,63 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
     "path": "DualityEngine/Include/DualityEngine/Renderer/OpenGL/GLVertexArray.h",
     "symbols": [
       "GLVertexArray",
-      "Init()",
-      "Shutdown()",
-      "Bind()",
-      "Unbind()",
-      "SetVertexData()",
-      "AddFloatAttribute()"
+      "void Init()",
+      "void Shutdown()",
+      "void Bind() const",
+      "void Unbind() const",
+      "void SetVertexData(const void* data, size_t sizeBytes, int vertexCount)",
+      "void AddFloatAttribute(int location, int componentCount, size_t stride, size_t offset)",
+      "int GetVertexCount() const",
+      "void SetSubMeshes(std::vector<MeshData::SubMesh> subMeshes)",
+      "const std::vector<MeshData::SubMesh>& GetSubMeshes() const"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Renderer/OpenGL/OpenGLRenderer2D.h",
     "symbols": [
       "OpenGLRenderer2D",
-      "Init()",
-      "Shutdown()",
-      "BeginFrame()",
-      "EndFrame()",
-      "BeginScene()",
-      "EndScene()",
-      "DrawQuad()",
-      "DrawText()",
-      "MeasureText()",
-      "LoadFont()",
-      "LoadTexture()",
-      "UnloadAllTextures()",
-      "UnloadAllFonts()",
-      "BeginCustomView()",
-      "DrawGrid()"
+      "void Init() override",
+      "void Shutdown() override",
+      "void BeginFrame() override",
+      "void EndFrame() override",
+      "void BeginScene(Screen screen, const glm::vec4& clearColor, bool clear) override",
+      "void EndScene() override",
+      "void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color, float rotationDegrees = 0.0f, uint32_t textureId = 0, const glm::vec4& uvRect = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)) override",
+      "void DrawText(const std::string& text, const glm::vec2& position, float fontSize, const glm::vec4& color, uint32_t fontId = 0) override",
+      "glm::vec2 MeasureText(const std::string& text, float fontSize, uint32_t fontId = 0) override",
+      "uint32_t LoadFont(const std::string& path) override",
+      "uint32_t LoadTexture(const std::string& path) override",
+      "void UnloadAllTextures() override",
+      "void UnloadAllFonts() override",
+      "uint32_t GetDrawCallCount() const override",
+      "void BeginCustomView(const glm::vec2& center, float zoom, float viewportWidth, float viewportHeight, const glm::vec4& clearColor, bool clear = true)",
+      "void DrawGrid(const glm::vec2& center, float zoom, float viewportWidth, float viewportHeight, float cellSize)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Renderer/OpenGL/OpenGLRenderer3D.h",
     "symbols": [
       "OpenGLRenderer3D",
-      "Init()",
-      "Shutdown()",
-      "BeginScene()",
-      "EndScene()",
-      "SetDepthWriteEnabled()",
-      "DrawMesh()",
-      "GetSubMeshCount()",
-      "LoadTexture()",
-      "LoadMesh()",
-      "UnloadAllTextures()",
-      "UnloadAllMeshes()",
-      "UploadGpuMesh()"
+      "void Init() override",
+      "void Shutdown() override",
+      "void BeginScene(Screen screen, ProjectionType projection, const glm::vec3& cameraPosition, const glm::vec3& cameraRotationDegrees, float fovDegrees, float orthoHalfHeight, float aspectRatio, float nearPlane, float farPlane, const glm::vec4& clearColor, bool clear) override",
+      "void EndScene() override",
+      "void SetDepthWriteEnabled(bool enabled)",
+      "void DrawMesh(MeshPrimitive primitive, uint32_t meshHandle, uint32_t subMeshIndex, const glm::vec3& translation, const glm::vec3& rotationDegrees, const glm::vec3& scale, const glm::vec4& color, uint32_t textureId = 0) override",
+      "uint32_t GetSubMeshCount(uint32_t meshHandle) const override",
+      "uint32_t LoadTexture(const std::string& path) override",
+      "uint32_t LoadMesh(const std::string& path) override",
+      "void UnloadAllTextures() override",
+      "void UnloadAllMeshes() override",
+      "uint32_t GetDrawCallCount() const override",
+      "GLVertexArray UploadGpuMesh(const std::vector<MeshVertex>& vertices)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Renderer/PrimitiveMeshes.h",
     "symbols": [
       "MeshVertex",
-      "GetPrimitiveMesh()"
+      "const std::vector<MeshVertex>& GetPrimitiveMesh(MeshPrimitive primitive)"
     ]
   },
   {
@@ -457,14 +505,14 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
   {
     "path": "DualityEngine/Include/DualityEngine/Renderer/SceneRenderer.h",
     "symbols": [
-      "RenderScreen()",
-      "RenderScreen3D()",
-      "GetActiveSpriteTexture()",
-      "ResolveSpriteTexture()",
-      "ResolveMeshTexture()",
-      "ResolveMeshMaterial()",
-      "ResolveMeshGeometry()",
-      "ShouldRenderOnScreen()"
+      "void RenderScreen(IRenderer2D& renderer2D, IRenderer3D& renderer3D, Scene& scene, Screen screen, const glm::vec4& clearColor)",
+      "void RenderScreen3D(IRenderer3D& renderer, Scene& scene, Screen screen, const glm::vec4& clearColor, bool clear = true)",
+      "AssetRef GetActiveSpriteTexture(Scene& scene, entt::entity handle)",
+      "uint32_t ResolveSpriteTexture(IRenderer2D& renderer, const AssetRef& textureRef)",
+      "uint32_t ResolveMeshTexture(IRenderer3D& renderer, const AssetRef& textureRef)",
+      "Material ResolveMeshMaterial(const AssetRef& materialRef)",
+      "uint32_t ResolveMeshGeometry(IRenderer3D& renderer, const AssetRef& meshRef)",
+      "bool ShouldRenderOnScreen(Scene& scene, entt::entity handle, Screen screen, const CameraComponent* camera = nullptr)"
     ]
   },
   {
@@ -483,8 +531,7 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
     "path": "DualityEngine/Include/DualityEngine/Renderer/UIAnchor.h",
     "symbols": [
       "UIAnchor",
-      "UIAnchorPresetToMinMaxPivot()",
-      "LegacyUIAnchorToRectTransform()"
+      "void UIAnchorPresetToMinMaxPivot(UIAnchor preset, glm::vec2& outAnchorMin, glm::vec2& outAnchorMax, glm::vec2& outPivot)"
     ]
   },
   {
@@ -496,12 +543,12 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
   {
     "path": "DualityEngine/Include/DualityEngine/Renderer/UIRenderer.h",
     "symbols": [
-      "FindOwningCanvas()",
-      "IsUIElementOnCanvas()",
-      "EnsureUIElementsHaveCanvas()",
-      "ResolveUIRect()",
-      "UpdateUIInteractions()",
-      "RenderScreenUI()"
+      "Entity FindOwningCanvas(Scene& scene, Entity entity)",
+      "bool IsUIElementOnCanvas(Scene& scene, Entity entity, Screen screen)",
+      "void EnsureUIElementsHaveCanvas(Scene& scene)",
+      "void ResolveUIRect(Scene& scene, Entity entity, glm::vec2& outTopLeft, glm::vec2& outSize)",
+      "void UpdateUIInteractions(Scene& scene)",
+      "void RenderScreenUI(IRenderer2D& renderer, Scene& scene, Screen screen)"
     ]
   },
   {
@@ -514,7 +561,48 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
     "path": "DualityEngine/Include/DualityEngine/Scene/Behaviour.h",
     "symbols": [
       "Behaviour",
-      "Entity()"
+      "virtual void OnCreate()",
+      "virtual void OnUpdate(float deltaTime)",
+      "virtual void OnDestroy()",
+      "virtual void OnEnable()",
+      "virtual void OnDisable()",
+      "virtual void OnApplicationFocus(bool focused)",
+      "virtual void OnApplicationPause(bool paused)",
+      "virtual void OnApplicationQuit()",
+      "virtual void OnCollisionEnter(Entity other)",
+      "virtual void OnCollisionExit(Entity other)",
+      "virtual void OnTriggerEnter(Entity other)",
+      "virtual void OnTriggerExit(Entity other)",
+      "T& GetComponent()",
+      "T* TryGetComponent()",
+      "const T* TryGetComponent() const",
+      "T* GetComponentInChildren(bool includeSelf = true)",
+      "const T* GetComponentInChildren(bool includeSelf = true) const",
+      "T* GetComponentInParent(bool includeSelf = true)",
+      "const T* GetComponentInParent(bool includeSelf = true) const",
+      "Entity GetParent() const",
+      "std::vector<Entity> GetChildren() const",
+      "void ClearChildren()",
+      "Entity GetEntity() const",
+      "bool IsEntityValid() const",
+      "Transform GetTransform() const",
+      "std::string GetName() const",
+      "void SetName(const std::string& name)",
+      "std::string GetTag() const",
+      "void SetTag(const std::string& tag)",
+      "void SetActive(bool active)",
+      "bool IsActive()",
+      "void SetEnabled(bool enabled)",
+      "bool IsEnabled() const",
+      "Entity ResolveEntityRef(EntityRef ref) const",
+      "static EntityRef MakeEntityRef(Entity entity)",
+      "virtual void SetEngineServices(const EngineServices* services)",
+      "Entity GetParentOf(Entity entity) const",
+      "std::vector<Entity> GetChildrenOf(Entity entity) const",
+      "T* FindComponentInChildren(Entity entity, bool includeSelf)",
+      "const T* FindComponentInChildrenConst(Entity entity, bool includeSelf) const",
+      "void CollectComponentsInChildren(Entity entity, bool includeSelf, std::vector<T*>& result)",
+      "void CollectComponentsInChildrenConst(Entity entity, bool includeSelf, std::vector<const T*>& result) const"
     ]
   },
   {
@@ -560,19 +648,28 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
       "FollowTargetComponent",
       "AudioListenerComponent",
       "ParticleSystemComponent",
-      "Particle"
+      "Particle",
+      "inline const AssetRef& MaterialForSubMesh(const std::vector<AssetRef>& materials, uint32_t subMeshIndex)",
+      "inline AssetRef& GetFlipbookFrame(SpriteFlipbookComponent& flipbook, int index)",
+      "inline glm::vec2& GetPolygonVertex2D(PolygonCollider2DComponent& poly, int index)",
+      "inline glm::vec3& GetLinePoint(LineRendererComponent& line, int index)",
+      "inline const glm::vec3& GetLinePoint(const LineRendererComponent& line, int index)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scene/Layer.h",
     "symbols": [
-      "Layer"
+      "Layer",
+      "inline uint32_t LayerBit(int layer)",
+      "inline const char* LayerName(Layer layer)",
+      "inline bool LayerToScreen(Layer layer, Screen& outScreen)",
+      "inline Layer ScreenToLayer(Screen screen)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scene/PhysicsRaycaster.h",
     "symbols": [
-      "UpdatePhysicsRaycasterInteractions()"
+      "void UpdatePhysicsRaycasterInteractions(Scene& scene)"
     ]
   },
   {
@@ -584,22 +681,22 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
       "IPointerDownHandler",
       "IPointerUpHandler",
       "IPointerClickHandler",
-      "OnPointerEnter()",
-      "OnPointerExit()",
-      "OnPointerDown()",
-      "OnPointerUp()",
-      "OnPointerClick()"
+      "virtual void OnPointerEnter(PointerEventData& eventData) = 0",
+      "virtual void OnPointerExit(PointerEventData& eventData) = 0",
+      "virtual void OnPointerDown(PointerEventData& eventData) = 0",
+      "virtual void OnPointerUp(PointerEventData& eventData) = 0",
+      "virtual void OnPointerClick(PointerEventData& eventData) = 0"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scene/PrefabSerializer.h",
     "symbols": [
       "PrefabSerializer",
-      "Save()",
-      "Apply()",
-      "Revert()",
-      "Unpack()",
-      "Duplicate()"
+      "static bool Save(Entity root, const std::string& path)",
+      "static bool Apply(Entity instanceRoot)",
+      "static Entity Revert(Scene& scene, Entity instanceRoot)",
+      "static bool Unpack(Entity instanceRoot)",
+      "static Entity Duplicate(Scene& scene, Entity source)"
     ]
   },
   {
@@ -607,41 +704,46 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
     "symbols": [
       "TransformComponent",
       "Scene",
-      "CreateEntity()",
-      "DestroyEntity()",
-      "GetPrimaryCamera()",
-      "GetScreenRoot()",
-      "EnsureScreenRoot()",
-      "GetParent()",
-      "GetChildren()",
-      "ClearChildren()",
-      "GetHierarchyTraversalOrder()",
-      "SetSiblingIndex()",
-      "GetWorldTransform()",
-      "FindEntityInScreen()",
-      "ResolveEntityLayer()",
-      "TryResolveEntityScreen()",
-      "IsEffectivelyActive()",
-      "Raycast2D()",
-      "Raycast3D()",
-      "ScreenPointToRay3D()",
-      "ScreenPointToWorld2D()",
-      "RaycastPoint2D()",
-      "OnRuntimeStart()",
-      "OnRuntimeUpdate()",
-      "OnRuntimeStop()",
-      "OnApplicationFocus()",
-      "OnApplicationPause()",
-      "OnApplicationQuit()",
-      "Clear()",
-      "SiblingListFor()",
-      "IsValid()"
+      "Entity CreateEntity(const std::string& name = \"Entity\")",
+      "void DestroyEntity(Entity entity)",
+      "Entity GetPrimaryCamera(Screen screen)",
+      "Entity GetScreenRoot(Screen screen)",
+      "Entity EnsureScreenRoot(Screen screen)",
+      "const std::vector<Entity>& GetRootEntities() const",
+      "Entity GetParent(Entity entity) const",
+      "std::vector<Entity> GetChildren(Entity entity) const",
+      "void ClearChildren(Entity parent)",
+      "std::vector<Entity> GetHierarchyTraversalOrder() const",
+      "void SetSiblingIndex(Entity child, Entity newParent, std::size_t siblingIndex, bool preserveWorldPosition = true)",
+      "TransformComponent GetWorldTransform(Entity entity)",
+      "Entity FindEntityInScreen(Screen screen, const std::string& name)",
+      "Layer ResolveEntityLayer(Entity entity)",
+      "bool TryResolveEntityScreen(Entity entity, Screen& outScreen)",
+      "bool IsEffectivelyActive(Entity entity)",
+      "RaycastHit2D Raycast2D(const glm::vec2& origin, const glm::vec2& direction, float maxDistance)",
+      "RaycastHit3D Raycast3D(const glm::vec3& origin, const glm::vec3& direction, float maxDistance)",
+      "bool ScreenPointToRay3D(Screen screen, const glm::vec2& screenPoint, glm::vec3& outOrigin, glm::vec3& outDirection)",
+      "bool ScreenPointToRay3D(Entity cameraEntity, const glm::vec2& screenPoint, glm::vec3& outOrigin, glm::vec3& outDirection)",
+      "bool ScreenPointToWorld2D(Entity cameraEntity, const glm::vec2& screenPoint, glm::vec2& outWorld)",
+      "RaycastHit2D RaycastPoint2D(const glm::vec2& worldPoint)",
+      "void OnRuntimeStart()",
+      "void OnRuntimeUpdate(float deltaTime)",
+      "void OnRuntimeStop()",
+      "void OnApplicationFocus(bool focused)",
+      "void OnApplicationPause(bool paused)",
+      "void OnApplicationQuit()",
+      "void Clear()",
+      "entt::registry& Registry()",
+      "std::vector<Entity>& SiblingListFor(Entity parent)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scene/SceneManager.h",
     "symbols": [
-      "SceneManager"
+      "SceneManager",
+      "static void RequestLoadScene(const std::string& assetsRelativePath)",
+      "static bool HasPendingLoad()",
+      "static std::string ConsumePendingLoad()"
     ]
   },
   {
@@ -650,20 +752,21 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
       "Scene",
       "TilemapData",
       "TilemapLoader",
-      "Load()",
-      "UpdateSceneRuntimeSystems()",
-      "ClearSceneRuntimeSystems()",
-      "GetParticlePool()"
+      "static TilemapData Load(const std::string& path)",
+      "void UpdateSceneRuntimeSystems(Scene& scene, float deltaTime)",
+      "void ClearSceneRuntimeSystems(Scene& scene)",
+      "std::vector<Particle>& GetParticlePool(entt::entity handle)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scene/SceneSerializer.h",
     "symbols": [
       "SceneSerializer",
-      "Serialize()",
-      "Deserialize()",
-      "SerializeToJson()",
-      "DeserializeFromJson()"
+      "explicit SceneSerializer(Scene& scene) : m_Scene(scene)",
+      "bool Serialize(const std::string& path)",
+      "bool Deserialize(const std::string& path)",
+      "nlohmann::json SerializeToJson()",
+      "bool DeserializeFromJson(const nlohmann::json& root)"
     ]
   },
   {
@@ -674,100 +777,221 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
       "SceneValidationIssue",
       "SceneValidationResult",
       "SceneValidator",
-      "HasErrors()",
-      "Validate()"
+      "bool HasErrors() const",
+      "static SceneValidationResult Validate(const Scene& scene)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scripting/AudioSource.h",
     "symbols": [
-      "AudioSource"
+      "AudioSource",
+      "explicit AudioSource(Entity entity) : m_Entity(entity)",
+      "void Play()",
+      "void Stop()",
+      "void Pause()",
+      "void UnPause()",
+      "void SetVolume(float volume)",
+      "bool IsPlaying() const"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scripting/Camera.h",
     "symbols": [
-      "Camera"
+      "Camera",
+      "explicit Camera(Entity entity) : m_Entity(entity)",
+      "operator bool() const",
+      "Screen GetScreen() const",
+      "void SetScreen(Screen screen)",
+      "bool IsPrimary() const",
+      "void SetPrimary(bool primary)",
+      "float GetZoom() const",
+      "void SetZoom(float zoom)",
+      "ProjectionType GetProjection() const",
+      "void SetProjection(ProjectionType projection)",
+      "float GetFovDegrees() const",
+      "void SetFovDegrees(float fov)",
+      "glm::vec4 GetBackground() const",
+      "void SetBackground(const glm::vec4& color)",
+      "uint32_t GetCullingMask() const",
+      "void SetCullingMask(uint32_t mask)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scripting/Collider2D.h",
     "symbols": [
-      "Collider2D"
+      "Collider2D",
+      "explicit Collider2D(Entity entity) : m_Entity(entity)",
+      "operator bool() const",
+      "bool IsBox() const",
+      "bool IsCircle() const",
+      "bool IsTrigger() const",
+      "void SetTrigger(bool trigger)",
+      "else if (IsCircle())",
+      "glm::vec2 GetOffset() const",
+      "void SetOffset(const glm::vec2& offset)",
+      "glm::vec2 GetBoxSize() const",
+      "void SetBoxSize(const glm::vec2& halfExtents)",
+      "float GetRadius() const",
+      "void SetRadius(float radius)",
+      "float GetFriction() const",
+      "void SetFriction(float friction)",
+      "float GetRestitution() const",
+      "void SetRestitution(float restitution)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scripting/Collider3D.h",
     "symbols": [
-      "Collider3D"
+      "Collider3D",
+      "explicit Collider3D(Entity entity) : m_Entity(entity)",
+      "operator bool() const",
+      "bool IsBox() const",
+      "bool IsSphere() const",
+      "bool IsTrigger() const",
+      "void SetTrigger(bool trigger)",
+      "else if (IsSphere())",
+      "glm::vec3 GetOffset() const",
+      "void SetOffset(const glm::vec3& offset)",
+      "glm::vec3 GetBoxSize() const",
+      "void SetBoxSize(const glm::vec3& halfExtents)",
+      "float GetRadius() const",
+      "void SetRadius(float radius)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scripting/Debug.h",
     "symbols": [
-      "Debug"
+      "Debug",
+      "static void Log(const std::string& message)",
+      "static void LogWarning(const std::string& message)",
+      "static void LogError(const std::string& message)",
+      "static bool Assert(bool condition, const std::string& message)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scripting/EngineServices.h",
     "symbols": [
       "EngineServices",
-      "long()"
+      "unsigned long long (*GetFrameCount)()"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scripting/EntityLayer.h",
     "symbols": [
-      "EntityLayer"
+      "EntityLayer",
+      "explicit EntityLayer(Entity entity) : m_Entity(entity)",
+      "operator bool() const",
+      "Layer GetLayer() const",
+      "bool HasLayerComponent() const",
+      "Layer GetComponentLayer() const",
+      "void SetComponentLayer(Layer layer)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scripting/Input.h",
     "symbols": [
-      "Input"
+      "Input",
+      "static bool GetKey(KeyCode key)",
+      "static bool GetKeyDown(KeyCode key)",
+      "static bool GetKeyUp(KeyCode key)",
+      "static float GetAxis(const std::string& axisName)",
+      "static bool GetPointerDown()",
+      "static glm::vec2 GetPointerPosition()",
+      "static Screen GetPointerScreen()"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scripting/LineRenderer.h",
     "symbols": [
       "LineRenderer",
-      "GetLinePoint()"
+      "explicit LineRenderer(Entity entity) : m_Entity(entity)",
+      "operator bool() const",
+      "bool GetEnabled() const",
+      "void SetEnabled(bool enabled)",
+      "glm::vec4 GetColor() const",
+      "void SetColor(const glm::vec4& color)",
+      "float GetWidth() const",
+      "void SetWidth(float width)",
+      "bool GetLoop() const",
+      "void SetLoop(bool loop)",
+      "bool GetUseWorldSpace() const",
+      "void SetUseWorldSpace(bool useWorldSpace)",
+      "int GetPositionCount() const",
+      "void SetPositionCount(int count)",
+      "glm::vec3 GetPosition(int index) const",
+      "bool SetPosition(int index, const glm::vec3& position)",
+      "bool SetPositions(const std::vector<glm::vec3>& positions)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scripting/MeshRenderer.h",
     "symbols": [
-      "MeshRenderer"
+      "MeshRenderer",
+      "explicit MeshRenderer(Entity entity) : m_Entity(entity)",
+      "operator bool() const",
+      "MeshPrimitive GetPrimitive() const",
+      "void SetPrimitive(MeshPrimitive primitive)",
+      "AssetRef GetMesh() const",
+      "void SetMesh(const AssetRef& mesh)",
+      "const std::vector<AssetRef>& GetMaterials() const",
+      "void SetMaterials(const std::vector<AssetRef>& materials)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scripting/Rigidbody2D.h",
     "symbols": [
-      "Rigidbody2D"
+      "Rigidbody2D",
+      "explicit Rigidbody2D(Entity entity) : m_Entity(entity)",
+      "operator bool() const",
+      "glm::vec2 GetVelocity() const",
+      "void SetVelocity(const glm::vec2& velocity)",
+      "void AddForce(const glm::vec2& force)",
+      "BodyType GetBodyType() const",
+      "void SetBodyType(BodyType type)",
+      "bool GetFixedRotation() const",
+      "void SetFixedRotation(bool fixedRotation)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scripting/Rigidbody3D.h",
     "symbols": [
-      "Rigidbody3D"
+      "Rigidbody3D",
+      "explicit Rigidbody3D(Entity entity) : m_Entity(entity)",
+      "operator bool() const",
+      "glm::vec3 GetVelocity() const",
+      "void SetVelocity(const glm::vec3& velocity)",
+      "void AddForce(const glm::vec3& force)",
+      "BodyType GetBodyType() const",
+      "void SetBodyType(BodyType type)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scripting/ScriptAudio.h",
     "symbols": [
-      "ScriptAudio"
+      "ScriptAudio",
+      "static void PlaySound(const std::string& assetGuid, bool loop = false)",
+      "static void StopAllSounds()"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scripting/ScriptContext.h",
     "symbols": [
-      "ScriptContext"
+      "ScriptContext",
+      "static void EnsureBound(const EngineServices* services)",
+      "static void Bind(const EngineServices* services, void* scene, unsigned int entityHandle)",
+      "static void Clear()",
+      "static const EngineServices* Services()",
+      "static void* Scene()",
+      "static unsigned int EntityHandle()"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scripting/ScriptDebug.h",
     "symbols": [
-      "ScriptDebug"
+      "ScriptDebug",
+      "static void LogInfo(const std::string& message)",
+      "static void LogWarn(const std::string& message)",
+      "static void LogError(const std::string& message)"
     ]
   },
   {
@@ -779,33 +1003,40 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
   {
     "path": "DualityEngine/Include/DualityEngine/Scripting/ScriptPhysics2D.h",
     "symbols": [
-      "ScriptPhysics2D"
+      "ScriptPhysics2D",
+      "static RaycastHit2D Raycast(const glm::vec2& origin, const glm::vec2& direction, float maxDistance)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scripting/ScriptPhysics3D.h",
     "symbols": [
-      "ScriptPhysics3D"
+      "ScriptPhysics3D",
+      "static RaycastHit3D Raycast(const glm::vec3& origin, const glm::vec3& direction, float maxDistance)",
+      "static bool ScreenPointToRay(Screen screen, const glm::vec2& screenPoint, glm::vec3& outOrigin, glm::vec3& outDirection)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scripting/ScriptRegistry.h",
     "symbols": [
       "ScriptRegistry",
-      "Clear()",
-      "Register()",
-      "IsRegistered()",
-      "TryCreate()",
-      "Count()",
-      "GetAllClassNames()",
-      "GetFields()"
+      "static void Clear()",
+      "static void Register(const ScriptFactoryEntry& entry)",
+      "static bool IsRegistered(const std::string& className)",
+      "static bool TryCreate(const std::string& className, Behaviour** outInstance, void (**outDestroy)(Behaviour*))",
+      "static int Count()",
+      "static std::vector<std::string> GetAllClassNames()",
+      "static const std::vector<FieldHandle>& GetFields(const std::string& className)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scripting/ScriptScene.h",
     "symbols": [
       "ScriptScene",
-      "Entity()"
+      "static Entity FindEntityInScreen(Screen screen, const std::string& name)",
+      "static Entity FindEntityInTopScreen(const std::string& name)",
+      "static Entity FindEntityInBottomScreen(const std::string& name)",
+      "static Entity Instantiate(const std::string& prefabAssetGuid)",
+      "static T* LoadScriptableObject(const std::string& assetGuid)"
     ]
   },
   {
@@ -824,34 +1055,76 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
     "path": "DualityEngine/Include/DualityEngine/Scripting/ScriptableObjectRegistry.h",
     "symbols": [
       "ScriptableObjectRegistry",
-      "Clear()",
-      "Register()",
-      "Find()",
-      "All()"
+      "static void Clear()",
+      "static void Register(const ScriptableObjectFactoryEntry& entry)",
+      "static const ScriptableObjectFactoryEntry* Find(const std::string& className)",
+      "static const std::vector<ScriptableObjectFactoryEntry>& All()"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scripting/SpriteFlipbook.h",
     "symbols": [
-      "SpriteFlipbook"
+      "SpriteFlipbook",
+      "explicit SpriteFlipbook(Entity entity) : m_Entity(entity)",
+      "operator bool() const",
+      "bool IsPlaying() const",
+      "void Play()",
+      "void Stop()",
+      "bool GetLoop() const",
+      "void SetLoop(bool loop)",
+      "float GetFrameDuration() const",
+      "void SetFrameDuration(float seconds)",
+      "int GetCurrentFrame() const"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scripting/SpriteRenderer.h",
     "symbols": [
-      "SpriteRenderer"
+      "SpriteRenderer",
+      "explicit SpriteRenderer(Entity entity) : m_Entity(entity)",
+      "operator bool() const",
+      "glm::vec4 GetColor() const",
+      "void SetColor(const glm::vec4& color)",
+      "glm::vec2 GetSize() const",
+      "void SetSize(const glm::vec2& size)",
+      "AssetRef GetTexture() const",
+      "void SetTexture(const AssetRef& texture)",
+      "void SetTextureGuid(const std::string& guid)"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scripting/Time.h",
     "symbols": [
-      "Time"
+      "Time",
+      "static float DeltaTime()",
+      "static float ElapsedTime()",
+      "static uint64_t FrameCount()"
     ]
   },
   {
     "path": "DualityEngine/Include/DualityEngine/Scripting/Transform.h",
     "symbols": [
-      "Transform"
+      "Transform",
+      "explicit Transform(Entity entity) : m_Entity(entity)",
+      "operator bool() const",
+      "glm::vec3 GetLocalPosition() const",
+      "void SetLocalPosition(const glm::vec3& position)",
+      "glm::vec2 GetLocalPosition2D() const",
+      "void SetLocalPosition2D(const glm::vec2& position)",
+      "glm::vec3 GetWorldPosition() const",
+      "glm::vec2 GetWorldPosition2D() const",
+      "void Translate(const glm::vec3& delta)",
+      "void Translate2D(const glm::vec2& delta)",
+      "glm::vec3 GetLocalRotation() const",
+      "void SetLocalRotation(const glm::vec3& rotation)",
+      "float GetRotationZ() const",
+      "void SetRotationZ(float degrees)",
+      "float GetRotationY() const",
+      "void SetRotationY(float degrees)",
+      "glm::vec3 GetLocalScale() const",
+      "void SetLocalScale(const glm::vec3& scale)",
+      "glm::vec2 GetLocalScale2D() const",
+      "void SetLocalScale2D(const glm::vec2& scale)"
     ]
   },
   {
@@ -860,7 +1133,40 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
       "UIButton",
       "UIRect",
       "UIImage",
-      "UIText"
+      "UIText",
+      "explicit UIButton(Entity entity) : m_Entity(entity)",
+      "operator bool() const",
+      "bool IsHovered() const",
+      "bool IsPressed() const",
+      "bool WasClicked() const",
+      "glm::vec4 GetNormalColor() const",
+      "void SetNormalColor(const glm::vec4& color)",
+      "glm::vec4 GetHoverColor() const",
+      "void SetHoverColor(const glm::vec4& color)",
+      "glm::vec4 GetPressedColor() const",
+      "void SetPressedColor(const glm::vec4& color)",
+      "explicit UIRect(Entity entity) : m_Entity(entity)",
+      "Screen GetScreen() const",
+      "void SetScreen(Screen screen)",
+      "glm::vec2 GetAnchorMin() const",
+      "void SetAnchorMin(const glm::vec2& anchorMin)",
+      "glm::vec2 GetAnchorMax() const",
+      "void SetAnchorMax(const glm::vec2& anchorMax)",
+      "glm::vec2 GetPivot() const",
+      "void SetPivot(const glm::vec2& pivot)",
+      "glm::vec2 GetAnchoredPosition() const",
+      "void SetAnchoredPosition(const glm::vec2& anchoredPosition)",
+      "glm::vec2 GetSizeDelta() const",
+      "void SetSizeDelta(const glm::vec2& sizeDelta)",
+      "void SetAnchorPreset(UIAnchor preset)",
+      "explicit UIImage(Entity entity) : m_Entity(entity)",
+      "glm::vec4 GetColor() const",
+      "void SetColor(const glm::vec4& color)",
+      "AssetRef GetTexture() const",
+      "void SetTexture(const AssetRef& texture)",
+      "explicit UIText(Entity entity) : m_Entity(entity)",
+      "std::string GetText() const",
+      "void SetText(const std::string& text)"
     ]
   }
 ]

@@ -21,7 +21,15 @@ async function collect(directory) {
 function symbolsFrom(text) {
   const symbols = new Set()
   for (const match of text.matchAll(/^\s*(?:class|struct|enum class)\s+([A-Za-z_]\w*)/gm)) symbols.add(match[1])
-  for (const match of text.matchAll(/^\s*(?:virtual\s+|static\s+)?(?:[\w:<>]+\s*[*&]?\s+)+([A-Za-z_]\w*)\s*\([^;{}]*\)\s*(?:const)?\s*(?:override)?\s*(?:=\s*0)?\s*;/gm)) symbols.add(`${match[1]}()`)
+  // Public headers in Duality intentionally contain many small inline wrappers. Index both
+  // declarations ending in ';' and inline declarations beginning a body, but only keep their
+  // signature (never header implementation text). This stays a discovery index, not a C++ parser.
+  for (const rawLine of text.split(/\r?\n/)) {
+    const line = rawLine.trim()
+    if (!line.includes('(') || line.startsWith('//') || /^(if|for|while|switch|return)\b/.test(line)) continue
+    const match = line.match(/^(?:(?:virtual|static|inline|explicit)\s+)?(?:[\w:<>~]+\s*[*&]?\s+)+[A-Za-z_~]\w*\s*\([^;{}]*\)\s*(?:const)?\s*(?:override)?\s*(?:=\s*0)?\s*(?:[;{]|$)/)
+    if (match) symbols.add(match[0].replace(/[;{]\s*$/, '').trim())
+  }
   return [...symbols].slice(0, 80)
 }
 

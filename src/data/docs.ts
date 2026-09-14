@@ -1,4 +1,5 @@
 export type Block =
+  | { type: 'heading'; text: string }
   | { type: 'paragraph'; text: string }
   | { type: 'callout'; tone: 'info' | 'warning' | 'success'; title: string; text: string }
   | { type: 'code'; language: 'cpp' | 'text' | 'cmake'; code: string }
@@ -273,6 +274,149 @@ export const docPages: DocPage[] = [
       { type: 'code', language: 'cpp', code: 'enum class LightingQuality {\n    Unlit,\n    VertexLit,\n    VertexLitBlobShadows\n};\n\n// Proposed Build Settings / Project Settings data.\nstruct RenderSettings {\n    LightingQuality Lighting = LightingQuality::VertexLit;\n    glm::vec3 AmbientColor{ 0.18f };\n    int MaxPointLights = 4; // Clamp to the hardware-safe budget.\n};' },
       { type: 'list', items: ['Expose Lighting Quality in Project Settings and permit a 3DS Build Settings override. Anti-aliasing/display-transfer selection stays independent.', 'Old 3DS validation uses the lowest supported lighting tier, normal gameplay scene, worst-case light overlap and both screens active.', 'New 3DS may raise a documented point-light cap only after profiling; game content must never depend on that higher cap.', 'Show renderer diagnostics in editor: mesh draw calls, visible mesh count, culled count, selected point lights, blob shadow count and estimated texture/linear-memory usage.', 'Use Citra for iteration, then verify frame time and memory on real Old 3DS hardware before declaring a tier supported.'] },
       { type: 'callout', tone: 'warning', title: 'Shadow-map gate', text: 'Do not start a shadow-map implementation until vertex lighting, RenderView, render queues, frustum culling and blob shadows are stable and measured. If static/baked lighting answers the game’s visual need, shadow maps should remain unnecessary.' }
+    ]
+  },
+  {
+    id: 'multiplayer-3ds-design', group: 'Future architecture', title: 'Multiplayer and Nintendo 3DS network design',
+    summary: 'A local-first networking architecture, protocol and implementation roadmap before any transport enters the engine.',
+    tags: ['proposal', 'multiplayer', 'uds', 'udp', 'replication'],
+    blocks: [
+      { type: 'callout', tone: 'warning', title: 'Design document — not implemented yet', text: 'Duality currently has no transport, lobby, replication or Network component. The existing application lifecycle callbacks are the only networking-adjacent runtime surface; every class and API below is proposed design, not callable code.' },
+      { type: 'table', headers: ['Principle', 'Decision'], rows: [
+        ['Gameplay is transport-agnostic', 'Scripts use session, peer, messages and game state. They never include <3ds.h>, UDS or BSD socket headers.'],
+        ['Local-first', '3DS UDS local wireless is the first milestone. Internet/UDP is a separate transport, not an extension of UDS.'],
+        ['Host authoritative', 'Clients send input/intent; host validates hits, simulation, spawns, scores and the authoritative snapshot.'],
+        ['No raw ECS on the wire', 'Never send entt::entity handles, pointers, std::string memory layout or memcpy of a C++ struct.'],
+        ['No blocked frame', 'Scan, receive, resend and reconnect are poll/tick operations with strict packet budgets.'],
+        ['Desktop before device', 'The same session and codec run through Loopback first, then desktop UDP, before two-device tests.']
+      ] },
+      { type: 'code', language: 'text', code: 'GameScripts / Behaviour\n    │  gameplay messages, input, presentation\n    ▼\nNetworkSession             // portable lobby, peers, reliability state\n    ├── PacketCodec         // versioned message <-> byte encoding\n    ├── ReplicationSystem   // later: commands, snapshots, interpolation\n    ▼\nINetworkTransport          // Host, Scan, Join, Send, Poll, Leave\n    ├── UdsTransport        // 3DS local wireless\n    ├── UdpTransport        // desktop + 3DS Wi-Fi / Internet\n    └── LoopbackTransport   // deterministic test transport' },
+      { type: 'paragraph', text: 'DualityEngine/Network should contain the portable codec, session state and transport interface. Only the 3DS platform implementation may include <3ds.h> and call UDS/SOC. This is the same boundary used by input: the host reads HID while game scripts consume a high-level API.' },
+      { type: 'code', language: 'cpp', code: '// Proposed only — not implemented.\nclass NetworkSession {\npublic:\n    NetworkState GetState() const;\n    bool Host(const LobbyConfig& config);\n    bool Join(const LobbyInfo& lobby);\n    void Send(PeerId peer, MessageType type, ByteSpan bytes, Delivery delivery);\n    void Tick(float deltaTime);\n};' },
+      { type: 'table', headers: ['UDS phase', 'libctru primitive', 'Engine responsibility'], rows: [
+        ['Lifetime', 'udsInit / udsExit', 'UdsTransport owns shared memory and an idempotent lifetime.'],
+        ['Host', 'udsGenerateDefaultNetworkStruct, udsCreateNetwork', 'Create a lobby and bind a data channel.'],
+        ['Discover / join', 'udsScanBeacons, udsConnectNetwork', 'Poll scan results and version-gate before joining.'],
+        ['Data', 'udsSendTo, udsPullPacket', 'Pass bounded byte packets to PacketCodec; cap packets per frame.'],
+        ['Peer status', 'udsGetConnectionStatus', 'Emit PeerJoined and PeerLeft once per actual transition.'],
+        ['Leave', 'udsDestroyNetwork / udsDisconnectNetwork / udsUnbind', 'Safe to call repeatedly during leave, pause and quit.']
+      ] },
+      { type: 'callout', tone: 'info', title: 'UDS is not a script API', text: 'udsSendTo only understands bytes. NetworkSession decides which peer is valid, which delivery policy applies and which gameplay callback is allowed to run on the main thread.' },
+      { type: 'paragraph', text: 'Online mode does not use UDS. UdpTransport owns the aligned socInit buffer on 3DS and non-blocking BSD UDP sockets; desktop provides an equivalent implementation. NAT traversal, relay infrastructure, accounts, authentication and matchmaking are external services, not a handful of engine functions.' },
+      { type: 'code', language: 'text', code: 'magic:u16 | protocolVersion:u8 | channel:u8 | sessionId:u16 |\nsequence:u16 | ack:u16 | ackBits:u32 | payloadLength:u16 | payload:bytes' },
+      { type: 'list', items: ['Unreliable sequenced is for newest input and transform snapshots; older packets may be discarded.', 'Reliable ordered is for lobby state, spawn/despawn, inventory and scene transitions.', 'Protocol/build/content hashes gate a connection before gameplay packets are accepted.', 'Packet length and packets-per-frame have hard caps; reject invalid lengths before allocation or parsing.', 'Replicate input commands and host snapshots, not TransformComponent state every frame. Spawn messages map prefab ID plus network ID, never an Entity handle.'] },
+      { type: 'table', headers: ['Lifecycle event', 'NetworkSession action'], rows: [
+        ['OnApplicationPause(true)', 'Stop input transmission, enter Suspended, mark transport stale and save a checkpoint if appropriate.'],
+        ['OnApplicationPause(false)', 'Re-scan/reconnect through the state machine; resume only after host confirmation.'],
+        ['OnApplicationQuit()', 'Best-effort leave, then idempotent cleanup. Never wait on a network operation.'],
+        ['Disconnect / timeout', 'Transition to Offline or reconnect flow; gameplay receives a single clear state event.']
+      ] },
+      { type: 'code', language: 'text', code: 'Offline\n  ├─ Host() ─────────────► Hosting ─► InGame ─► Leaving ─► Offline\n  └─ Scan() ─► Discovering ─► Joining ─► Lobby ─► InGame\n                         │        │          │\n                         └────────┴──────────┴─ error / timeout ─► Offline\n\nSuspended is an overlay state: no gameplay packets are sent until reconnect succeeds.' },
+      { type: 'list', items: ['Foundation: bounds-checked ByteWriter/ByteReader, versioned codec, LoopbackTransport and loss/reorder tests.', 'UDS lobby: host, scan, join, leave and peer status — no scene replication yet.', 'Message layer: reliable/unreliable channels, acknowledgement/retry, packet budgets and console metrics.', 'Vertical slice: two players, client input command, host snapshot, disconnect and rejoin.', 'UDP direct IP: retain the session/codec and replace only the transport.', 'Prediction, reconciliation and online backend only after real-device profiling and stable reconnect behaviour.'] },
+      { type: 'callout', tone: 'success', title: 'Starting decision', text: 'When implementation begins, build one host-authoritative UDS local-wireless demo game mode first. Add UDP only after the exact same session, codec and gameplay authority flow is reliable on two real devices.' }
+    ]
+  },
+  {
+    id: 'renderer-deep-dive', group: 'Engine systems', title: 'Renderer deep dive: frame, passes and resource ownership',
+    summary: 'The exact responsibilities of SceneRenderer, IRenderer backends, cameras, materials and GPU caches in the current engine.',
+    tags: ['renderer', 'scene renderer', 'camera', 'material', 'gpu cache'],
+    blocks: [
+      { type: 'heading', text: 'Scope and invariants' },
+      { type: 'paragraph', text: 'This page describes the renderer that exists today, not the proposed lighting pipeline. The same SceneRenderer path is used by DualityPlayer and the editor Game panel. Platform code changes how draw calls reach the GPU, but it must not change scene visibility, material resolution or screen routing decisions.' },
+      { type: 'table', headers: ['Layer', 'Owns', 'Must not own'], rows: [
+        ['SceneRenderer', 'Scene traversal, effective activity, camera/layer filtering, asset resolution, sort policy and pass order.', 'Window, C3D frame lifetime, raw GPU allocation or game input.'],
+        ['IRenderer2D / IRenderer3D', 'Backend resource handles, drawing state and draw-call counters.', 'Asset GUID resolution, scene hierarchy policy or script state.'],
+        ['Citro2DRenderer / Citro3DRenderer', '3DS-specific GPU state and cached C3D resources.', 'C3D_FrameBegin/C3D_FrameEnd ownership; that stays in the player main loop.'],
+        ['MaterialLoader / AssetDatabase', 'Material JSON and GUID-to-path resolution.', 'GPU residency; a renderer loads the resolved path into its own cache.'],
+        ['Editor Scene panel', 'Free editor camera, picking and gizmos.', 'A different gameplay renderer; Game panel remains the truth for final composition.']
+      ] },
+      { type: 'callout', tone: 'info', title: 'One scene, two physical screens', text: 'Top and Bottom are not separate Scene instances. A CameraComponent chooses its Screen; EntityLayer and the camera CullingMask decide whether an entity is eligible. The renderer evaluates this for each screen every frame.' },
+      { type: 'heading', text: 'Per-frame and per-screen sequence' },
+      { type: 'code', language: 'text', code: 'DualityPlayer main loop\n  ├─ aptMainLoop / HID sample / runtime update\n  ├─ C3D_FrameBegin(...)                         // 3DS only, once\n  ├─ RenderScreen(..., Top)\n  │    ├─ choose active primary camera\n  │    ├─ RenderScreen3D: clear + depth + mesh pass\n  │    ├─ 2D sprite/flipbook/line pass\n  │    └─ Canvas UI pass\n  ├─ RenderScreen(..., Bottom)\n  │    └─ same ordered passes, distinct target\n  └─ C3D_FrameEnd(...)                           // 3DS only, once' },
+      { type: 'list', items: ['A physical screen can draw both meshes and sprites in a single frame. ProjectionType changes the 3D camera lens, not whether 2D or 3D content exists.', 'The mesh pass clears first and owns depth. Sprite and UI passes compose over it; they do not participate in mesh depth testing.', 'A missing primary camera makes the 3D mesh pass a no-op. UI may still render because Canvas has its own fixed screen-space rule.', 'A camera background color overrides the caller fallback clear color. The screen is cleared exactly once even though multiple passes may target it.', 'Citro2D and Citro3D mutate shared global C3D state. Each backend rebinds the program/pipeline state it needs at its own BeginScene or Draw call boundary.'] },
+      { type: 'heading', text: 'Camera, layer and visibility resolution' },
+      { type: 'paragraph', text: 'SceneRenderer first identifies the primary enabled camera for a Screen. It reads the camera world transform, projection fields, near/far planes, FOV or orthographic zoom, background and culling mask. It then calls ShouldRenderOnScreen for each candidate entity. That test combines effective hierarchy activity, inherited Top/Bottom layer routing and the camera mask; it is the only place a renderer should decide screen visibility.' },
+      { type: 'table', headers: ['Authoring value', 'Runtime consequence', 'Common mistake'], rows: [
+        ['Camera.Screen', 'Routes a camera view to Top or Bottom target.', 'Expecting one camera to render both displays. Use two cameras when views differ.'],
+        ['Camera.Primary', 'Selects the active camera for that screen.', 'Leaving several primary cameras and assuming render order defines the result.'],
+        ['EntityLayer TOP/BOTTOM', 'Excludes an entity from the other physical screen, including children through hierarchy rules.', 'Using sort order to route objects between physical displays.'],
+        ['CullingMask', 'Filters rendering layers after screen routing.', 'Using it as a replacement for Top/Bottom entity placement.'],
+        ['ProjectionType', 'Changes mesh projection only.', 'Assuming Orthographic hides meshes or Perspective hides sprites.']
+      ] },
+      { type: 'heading', text: 'Materials, textures and meshes' },
+      { type: 'paragraph', text: 'MeshRendererComponent references an optional OBJ Mesh plus an optional Material list. An empty/unresolved Mesh falls back to MeshPrimitive. An imported mesh can contain submesh ranges; SceneRenderer resolves one material per range and emits one DrawMesh call for each range. One material entry covers all ranges; multiple entries are index-matched and unspecified ranges receive the default white unlit material.' },
+      { type: 'list', items: ['Material is a reusable .mat JSON asset with Color and Texture today. MaterialLoader returns a default material on missing/invalid data rather than failing a frame.', 'AssetRef contains a GUID. AssetDatabase maps the GUID to a project path on desktop or a cooked romfs manifest path on device.', 'IRenderer2D::LoadTexture and IRenderer3D::LoadTexture maintain separate backend caches. Handle 0 means no texture; the draw uses flat color or a safe fallback.', 'IRenderer3D::LoadMesh uploads imported vertex data and returns a backend-local handle. Imported handles and built-in MeshPrimitive values use separate storage.', 'UnloadAllTextures and UnloadAllMeshes are scene-transition operations. They invalidate backend handles and must never run while an active render pass still references them.'] },
+      { type: 'heading', text: 'Sort and transparency policy' },
+      { type: 'paragraph', text: 'Sprite render order is deterministic and explicitly driven by SortOrder, then scene/hierarchy order for ties. That rule is appropriate for 2D composition. Meshes are depth-tested and current material data is unlit/opaque; their visible order should be driven by camera depth, not hierarchy sibling order. A future transparent mesh queue must sort back-to-front and disable depth writes while retaining depth tests.' },
+      { type: 'callout', tone: 'warning', title: 'Renderer extension rule', text: 'Do not add raw GPU calls to a Behaviour or to SceneRenderer. Extend IRenderer2D/IRenderer3D or introduce a renderer-owned RenderView/DrawItem data type, then implement the same contract in OpenGL and Citro backends.' }
+    ]
+  },
+  {
+    id: 'physics-deep-dive', group: 'Engine systems', title: 'Physics deep dive: 2D, 3D, units and callbacks',
+    summary: 'How Box2D and Bullet are integrated into Scene runtime without leaking backend ownership into gameplay code.',
+    tags: ['physics', 'box2d', 'bullet', 'collision', 'units'],
+    blocks: [
+      { type: 'heading', text: 'Two worlds, one gameplay convention' },
+      { type: 'paragraph', text: 'Duality runs a Box2D world for 2D bodies and a Bullet discrete dynamics world for 3D bodies. They are separate simulations with separate shape sets, but components share project world units, BodyType concepts, gravity settings, layer/hierarchy activity and Behaviour callback semantics. A game must choose which dimension owns an object instead of attaching unrelated 2D and 3D physics to the same gameplay problem.' },
+      { type: 'table', headers: ['Concern', '2D', '3D'], rows: [
+        ['Backend', 'Box2D v2.4 API.', 'Bullet btDiscreteDynamicsWorld.'],
+        ['Bodies', 'Rigidbody2DComponent with opaque RuntimeBody.', 'Rigidbody3DComponent with opaque RuntimeBody and RuntimeCollisionShape.'],
+        ['Supported authoring shapes', 'Box, circle, capsule approximation and convex polygon.', 'Box, sphere and capsule.'],
+        ['Queries', 'Physics2D::Raycast returns RaycastHit2D.', 'Physics3D::Raycast and ScreenPointToRay return 3D data.'],
+        ['Triggers', 'Native Box2D sensor fixtures.', 'No-contact-response Bullet collision objects while manifolds remain observable.']
+      ] },
+      { type: 'heading', text: 'Units and project settings' },
+      { type: 'paragraph', text: 'PhysicsUnits is the single conversion boundary. PPU controls the authored sprite/world relationship; PhysicsUnits::ToPhysics and ToWorld convert values handed to a backend. Gravity remains an authored world-units-per-second-squared value and is converted consistently. Scripts should express speed, jump force and collider size in project world units rather than screen pixels or backend-specific metres.' },
+      { type: 'list', items: ['Changing PPU changes how imported sprite pixels map to world scale; it does not automatically repair existing scene transforms or magic numbers in gameplay scripts.', 'Collider Size fields are half-extents where documented. A box Size of {0.5, 0.5} spans one world unit in each 2D axis.', 'Mass equal to zero means derive/use backend static behaviour according to the component BodyType and shape data. Do not use zero mass as a hidden disable flag.', 'RuntimeBody and RuntimeFixture are opaque engine-owned pointers. They exist only between Scene::OnRuntimeStart and OnRuntimeStop and are never serialised or accessed directly by game code.'] },
+      { type: 'heading', text: 'Runtime synchronization and structural changes' },
+      { type: 'code', language: 'text', code: 'Play start\n  ├─ read authored Rigidbody/Collider/Transform components\n  ├─ create backend body and fixture/shape\n  └─ store opaque runtime handles in components\n\nEach runtime step\n  ├─ synchronize authored transform -> kinematic/static body where applicable\n  ├─ step Box2D and Bullet worlds\n  ├─ synchronize dynamic body -> TransformComponent\n  └─ diff contact pairs -> Behaviour collision/trigger callbacks\n\nPlay stop / entity destruction\n  └─ destroy backend objects before scene component memory disappears' },
+      { type: 'paragraph', text: 'Adding, removing or editing a collider/body at runtime is a structural operation. Systems must recreate or update the corresponding backend object at a safe point outside an active simulation step. This is why script code should use wrappers such as Rigidbody2D and Collider2D rather than retain backend pointers.' },
+      { type: 'heading', text: 'Contact callback contract' },
+      { type: 'table', headers: ['Condition', 'Callback', 'Guarantee'], rows: [
+        ['A non-trigger pair begins/ends contact', 'OnCollisionEnter / OnCollisionExit on both entities.', 'other is the opposing Entity.'],
+        ['Either collider is trigger and pair begins/ends contact', 'OnTriggerEnter / OnTriggerExit on both entities.', 'A pair produces trigger or collision callbacks, never both.'],
+        ['Pair remains touching', 'No Stay callback in current contract.', 'Gameplay stores its own contact state when continuous behaviour is required.'],
+        ['Entity inactive or script disabled', 'No gameplay callback while inactive/disabled.', 'Engine still owns safe backend cleanup.']
+      ] },
+      { type: 'callout', tone: 'warning', title: 'Safe gameplay pattern', text: 'Treat Entity values from a collision or raycast as potentially stale after you destroy an entity, load a scene or change hierarchy. Test entity truthiness and reacquire components with TryGetComponent before acting.' },
+      { type: 'heading', text: 'Raycasts and pointer interaction' },
+      { type: 'paragraph', text: 'Physics raycasts are queries, not rendering. Physics2D::Raycast takes world-space origin/direction and returns a hit entity, point, normal and distance. Physics3D adds ScreenPointToRay, which uses the active camera to construct a world ray. PhysicsRaycaster2DComponent or PhysicsRaycaster3DComponent is the bridge from pointer input to IPointer event interfaces; a Rigidbody is not required merely to receive a pointer click.' }
+    ]
+  },
+  {
+    id: 'citro3d-deep-dive', group: 'Nintendo 3DS', title: 'Citro3D deep dive: GPU frame, targets and shader state',
+    summary: 'The exact native 3DS rendering lifecycle Duality must preserve when evolving its platform renderer.',
+    tags: ['citro3d', 'pica200', 'c3d', 'shader', 'linear memory'],
+    blocks: [
+      { type: 'heading', text: 'Global GPU lifetime' },
+      { type: 'paragraph', text: 'Citro3D is process-global state. DualityPlayer, not Citro2DRenderer or Citro3DRenderer, owns C3D_Init, the one C3D_FrameBegin/C3D_FrameEnd bracket per hardware frame and C3D_Fini. Both renderer backends are guests inside that bracket. Creating a second bracket from a game package or renderer helper is a state-corruption bug, not an optimization.' },
+      { type: 'table', headers: ['Call / object', 'Owner in Duality', 'Lifetime rule'], rows: [
+        ['C3D_Init / C3D_Fini', 'DualityPlayer application entry.', 'Once for the process; finish renderer resources before C3D_Fini.'],
+        ['C3D_FrameBegin / C3D_FrameEnd', 'DualityPlayer frame loop.', 'Exactly once for a hardware frame containing both screen renders.'],
+        ['C2D_CreateScreenTarget', 'Citro2DRenderer.', 'Creates physical-screen targets shared non-owningly with Citro3DRenderer.'],
+        ['C3D_RenderTarget*', 'Citro2DRenderer owns; Citro3DRenderer receives SetScreenTargets.', 'Citro3DRenderer must never destroy or replace these targets.'],
+        ['DVLB / shaderProgram_s', 'Citro3DRenderer.', 'Parse/init at backend Init; free before C3D_Fini.'],
+        ['linearAlloc vertex buffers', 'Citro3DRenderer.', 'Allocate once for primitive/imported mesh cache; linearFree on unload/shutdown.'],
+        ['C3D_Tex cache', 'Citro3DRenderer.', 'One-based renderer-local handles; C3D_TexDelete before cache clear.']
+      ] },
+      { type: 'heading', text: 'Screen targets and depth' },
+      { type: 'paragraph', text: 'Citro3DRenderer draws to Citro2D-created targets so 2D and 3D content for a physical screen compose onto exactly the same display target. BeginScene selects Top/Bottom target, clears color only when necessary, always clears depth for a new mesh pass, then calls C3D_FrameDrawOn. PICA200 uses the reversed-depth convention in this backend: GPU_GREATER depth testing is enabled for meshes and disabled again before Citro2D work.' },
+      { type: 'list', items: ['Perspective uses Mtx_PerspTilt with FOV converted through C3D_AngleFromDegrees.', 'Orthographic uses Mtx_OrthoTilt with a Y-down arrangement that matches Duality 2D screen composition.', 'View is the inverse of the camera world transform; model is composed as Translation × RotationZ × RotationY × RotationX × Scale.', 'C3D_Mtx layout differs from GLM. IRenderer3D passes decomposed camera/model values specifically to avoid byte-copying matrices between incompatible conventions.', 'The mesh pass must restore/avoid leaking depth, shader and texture environment state before Citro2D draws.'] },
+      { type: 'heading', text: 'Vertex shader and attribute contract' },
+      { type: 'paragraph', text: 'The current mesh.v.pica vertex shader is intentionally unlit. Attribute v0 is position, v1 is texture coordinate and v2 is a fixed draw color set by C3D_FixedAttribSet. It outputs clip position, UV and color. Texture blending is configured by C3D_TexEnv: MODULATE combines texture and color, while REPLACE yields flat primary color when texture handle is zero.' },
+      { type: 'code', language: 'text', code: 'Current draw state\n  C3D_BindProgram(shaderProgram)\n  AttrInfo_AddLoader(v0, float3 position)\n  AttrInfo_AddLoader(v1, float2 uv)\n  AttrInfo_AddFixed(v2, color)\n  BufInfo_Add(vertexBuffer, sizeof(MeshVertex), 2 attributes, ...)\n  C3D_FVUnifMtx4x4(projection)\n  C3D_FVUnifMtx4x4(modelView)\n  C3D_TexBind(0, tex) + C3D_TexEnv...\n  C3D_DrawArrays(GPU_TRIANGLES, firstVertex, vertexCount)' },
+      { type: 'callout', tone: 'warning', title: 'Lighting migration requirement', text: 'Vertex lighting changes this contract: MeshVertex needs normals, the shader needs a normal attribute plus light uniforms, and both AttrInfo/BufInfo stride declarations must change in lockstep for OpenGL and Citro3D. Do not update only the shader or only the OBJ importer.' },
+      { type: 'heading', text: 'Texture cooking, sampler state and memory' },
+      { type: 'paragraph', text: 'The device backend expects cooked .t3x data at a romfs path, not arbitrary JPG or PNG at runtime. Tex3DS_TextureImport creates C3D_Tex from the cooked bytes. Import settings determine point/bilinear sampling, clamp/repeat wrapping and whether mip filtering can be used. Texture paths are cached, including failures, so a missing asset does not repeatedly allocate/read every frame.' },
+      { type: 'list', items: ['Use linearAlloc only for GPU-visible linear allocations such as uploaded vertex buffers; pair every allocation with exactly one linearFree.', 'Avoid duplicating a large texture in both 2D and 3D backend caches unless the asset genuinely appears in both paths. This is an optimization target, not a reason to share unsafe raw C3D_Tex ownership today.', 'Mipmaps reduce distant texture shimmer on 3D surfaces but increase cooked texture memory. Enable them per texture after checking hardware VRAM/linear-memory budget.', 'Display-transfer anti-aliasing is chosen at output transfer/build configuration. It is independent from texture filtering, mipmaps, lighting and shadows.'] },
+      { type: 'heading', text: 'Debugging native rendering failures' },
+      { type: 'table', headers: ['Symptom', 'First checks'], rows: [
+        ['Mesh disappears after 2D draws', 'Verify Citro3D program/attributes/textures are rebound before every mesh draw and Citro2D prepares its own state before 2D draws.'],
+        ['Wrong clear color', 'Check C3D clear packing order, not Citro2D color packing.'],
+        ['Depth looks inverted', 'Check GPU_GREATER and depth clear value; do not copy desktop GPU_LESS defaults.'],
+        ['Texture works in editor but not device', 'Confirm cook manifest GUID path, .t3x conversion, romfs copy and import settings.'],
+        ['Random crash after scene change', 'Audit C3D_TexDelete, linearFree and renderer cache clear order; never use a stale backend handle.']
+      ] }
     ]
   }
 ]
