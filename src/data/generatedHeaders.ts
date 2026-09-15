@@ -38,7 +38,6 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
     "symbols": [
       "MaterialLoader",
       "static Material Load(const std::string& path)",
-      "static void SetRuntime(const std::string& path, const Material& material)",
       "static bool Save(const std::string& path, const Material& material)"
     ]
   },
@@ -970,7 +969,11 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
       "AssetRef GetMesh() const",
       "void SetMesh(const AssetRef& mesh)",
       "const std::vector<AssetRef>& GetMaterials() const",
-      "void SetMaterials(const std::vector<AssetRef>& materials)"
+      "void SetMaterials(const std::vector<AssetRef>& materials)",
+      "void SetMaterialColor(const glm::vec4& color)",
+      "void ClearMaterialColor()",
+      "bool HasMaterialColor() const",
+      "glm::vec4 GetMaterialColor() const"
     ]
   },
   {
