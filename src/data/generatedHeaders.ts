@@ -346,6 +346,9 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
       "virtual void Shutdown() = 0",
       "virtual void BeginScene(Screen screen, ProjectionType projection, const glm::vec3& cameraPosition, const glm::vec3& cameraRotationDegrees, float fovDegrees, float orthoHalfHeight, float aspectRatio, float nearPlane, float farPlane, const glm::vec4& clearColor, bool clear = true) = 0",
       "virtual void EndScene() = 0",
+      "virtual bool BeginDirectionalShadowMap(const ShadowMapPass&)",
+      "virtual void DrawDirectionalShadowCaster(const MeshDrawCommand&)",
+      "virtual void EndDirectionalShadowMap()",
       "virtual void BeginScene(const RenderView& view, const glm::vec4& clearColor, bool clear = true) = 0",
       "virtual void DrawMesh(MeshPrimitive primitive, uint32_t meshHandle, uint32_t subMeshIndex, const glm::vec3& translation, const glm::vec3& rotationDegrees, const glm::vec3& scale, const glm::vec4& color, uint32_t textureId = 0) = 0",
       "virtual void DrawMesh(const MeshDrawCommand& command) = 0",
@@ -426,7 +429,6 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
     "path": "DualityEngine/Include/DualityEngine/Renderer/OpenGL/GLShaderProgram.h",
     "symbols": [
       "GLShaderProgram",
-      "void Init(const char* vertexSource, const char* fragmentSource)",
       "void Shutdown()",
       "void Bind() const",
       "void Unbind() const",
@@ -490,6 +492,9 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
       "void BeginScene(Screen screen, ProjectionType projection, const glm::vec3& cameraPosition, const glm::vec3& cameraRotationDegrees, float fovDegrees, float orthoHalfHeight, float aspectRatio, float nearPlane, float farPlane, const glm::vec4& clearColor, bool clear) override",
       "void BeginScene(const RenderView& view, const glm::vec4& clearColor, bool clear) override",
       "void EndScene() override",
+      "bool BeginDirectionalShadowMap(const ShadowMapPass& pass) override",
+      "void DrawDirectionalShadowCaster(const MeshDrawCommand& command) override",
+      "void EndDirectionalShadowMap() override",
       "void SetDepthWriteEnabled(bool enabled)",
       "void DrawMesh(MeshPrimitive primitive, uint32_t meshHandle, uint32_t subMeshIndex, const glm::vec3& translation, const glm::vec3& rotationDegrees, const glm::vec3& scale, const glm::vec4& color, uint32_t textureId = 0) override",
       "void DrawMesh(const MeshDrawCommand& command) override",
@@ -516,9 +521,20 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
     ]
   },
   {
+    "path": "DualityEngine/Include/DualityEngine/Renderer/RenderSettings.h",
+    "symbols": [
+      "RenderSettings",
+      "static void SetShadowMode(ShadowMode mode)",
+      "static ShadowMode GetShadowMode()",
+      "static ShadowMode GetEffectiveShadowMode()",
+      "static bool UsesBlobShadows()"
+    ]
+  },
+  {
     "path": "DualityEngine/Include/DualityEngine/Renderer/RenderView.h",
     "symbols": [
       "DirectionalLightData",
+      "ShadowMapPass",
       "RenderView",
       "MeshDrawCommand"
     ]
@@ -526,11 +542,12 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
   {
     "path": "DualityEngine/Include/DualityEngine/Renderer/SceneRenderer.h",
     "symbols": [
-      "void RenderScreen(IRenderer2D& renderer2D, IRenderer3D& renderer3D, Scene& scene, Screen screen, const glm::vec4& clearColor, bool clear = true)",
-      "void RenderScreen3D(IRenderer3D& renderer, Scene& scene, Screen screen, const glm::vec4& clearColor, bool clear = true)",
+      "SceneRenderStats",
+      "SceneRenderStats RenderScreen(IRenderer2D& renderer2D, IRenderer3D& renderer3D, Scene& scene, Screen screen, const glm::vec4& clearColor, bool clear = true)",
+      "SceneRenderStats RenderScreen3D(IRenderer3D& renderer, Scene& scene, Screen screen, const glm::vec4& clearColor, bool clear = true)",
       "RenderView BuildRenderView(Scene& scene, Entity camera, Screen screen)",
       "void PopulateMainDirectionalLight(Scene& scene, RenderView& view)",
-      "void RenderDirectionalBlobShadows(IRenderer3D& renderer, Scene& scene, Screen screen, const RenderView& view, const CameraComponent* cameraFilter = nullptr)",
+      "uint32_t RenderDirectionalBlobShadows(IRenderer3D& renderer, Scene& scene, Screen screen, const RenderView& view, const CameraComponent* cameraFilter = nullptr)",
       "AssetRef GetActiveSpriteTexture(Scene& scene, entt::entity handle)",
       "uint32_t ResolveSpriteTexture(IRenderer2D& renderer, const AssetRef& textureRef)",
       "uint32_t ResolveMeshTexture(IRenderer3D& renderer, const AssetRef& textureRef)",
@@ -543,6 +560,13 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
     "path": "DualityEngine/Include/DualityEngine/Renderer/Screen.h",
     "symbols": [
       "Screen"
+    ]
+  },
+  {
+    "path": "DualityEngine/Include/DualityEngine/Renderer/ShadowMode.h",
+    "symbols": [
+      "ShadowMode",
+      "inline ShadowMode ShadowModeFromInt(int value)"
     ]
   },
   {
