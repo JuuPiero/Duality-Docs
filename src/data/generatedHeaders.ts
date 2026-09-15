@@ -38,6 +38,7 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
     "symbols": [
       "MaterialLoader",
       "static Material Load(const std::string& path)",
+      "static void SetRuntime(const std::string& path, const Material& material)",
       "static bool Save(const std::string& path, const Material& material)"
     ]
   },
@@ -346,13 +347,21 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
       "virtual void Shutdown() = 0",
       "virtual void BeginScene(Screen screen, ProjectionType projection, const glm::vec3& cameraPosition, const glm::vec3& cameraRotationDegrees, float fovDegrees, float orthoHalfHeight, float aspectRatio, float nearPlane, float farPlane, const glm::vec4& clearColor, bool clear = true) = 0",
       "virtual void EndScene() = 0",
+      "virtual void BeginScene(const RenderView& view, const glm::vec4& clearColor, bool clear = true) = 0",
       "virtual void DrawMesh(MeshPrimitive primitive, uint32_t meshHandle, uint32_t subMeshIndex, const glm::vec3& translation, const glm::vec3& rotationDegrees, const glm::vec3& scale, const glm::vec4& color, uint32_t textureId = 0) = 0",
+      "virtual void DrawMesh(const MeshDrawCommand& command) = 0",
       "virtual uint32_t GetSubMeshCount(uint32_t meshHandle) const = 0",
       "virtual uint32_t LoadTexture(const std::string& path) = 0",
       "virtual uint32_t LoadMesh(const std::string& path) = 0",
       "virtual void UnloadAllTextures() = 0",
       "virtual void UnloadAllMeshes() = 0",
       "virtual uint32_t GetDrawCallCount() const = 0"
+    ]
+  },
+  {
+    "path": "DualityEngine/Include/DualityEngine/Renderer/MaterialShadingMode.h",
+    "symbols": [
+      "MaterialShadingMode"
     ]
   },
   {
@@ -393,8 +402,10 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
       "void Shutdown() override",
       "void SetScreenTargets(C3D_RenderTarget* top, C3D_RenderTarget* bottom)",
       "void BeginScene(Screen screen, ProjectionType projection, const glm::vec3& cameraPosition, const glm::vec3& cameraRotationDegrees, float fovDegrees, float orthoHalfHeight, float aspectRatio, float nearPlane, float farPlane, const glm::vec4& clearColor, bool clear) override",
+      "void BeginScene(const RenderView& view, const glm::vec4& clearColor, bool clear) override",
       "void EndScene() override",
       "void DrawMesh(MeshPrimitive primitive, uint32_t meshHandle, uint32_t subMeshIndex, const glm::vec3& translation, const glm::vec3& rotationDegrees, const glm::vec3& scale, const glm::vec4& color, uint32_t textureId = 0) override",
+      "void DrawMesh(const MeshDrawCommand& command) override",
       "uint32_t GetSubMeshCount(uint32_t meshHandle) const override",
       "uint32_t LoadTexture(const std::string& path) override",
       "uint32_t LoadMesh(const std::string& path) override",
@@ -423,6 +434,7 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
       "int GetUniformLocation(const char* name) const",
       "int GetAttribLocation(const char* name) const",
       "void SetUniformMat4(int location, const glm::mat4& value) const",
+      "void SetUniformVec3(int location, const glm::vec3& value) const",
       "void SetUniformVec4(int location, const glm::vec4& value) const",
       "void SetUniformInt(int location, int value) const"
     ]
@@ -477,9 +489,11 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
       "void Init() override",
       "void Shutdown() override",
       "void BeginScene(Screen screen, ProjectionType projection, const glm::vec3& cameraPosition, const glm::vec3& cameraRotationDegrees, float fovDegrees, float orthoHalfHeight, float aspectRatio, float nearPlane, float farPlane, const glm::vec4& clearColor, bool clear) override",
+      "void BeginScene(const RenderView& view, const glm::vec4& clearColor, bool clear) override",
       "void EndScene() override",
       "void SetDepthWriteEnabled(bool enabled)",
       "void DrawMesh(MeshPrimitive primitive, uint32_t meshHandle, uint32_t subMeshIndex, const glm::vec3& translation, const glm::vec3& rotationDegrees, const glm::vec3& scale, const glm::vec4& color, uint32_t textureId = 0) override",
+      "void DrawMesh(const MeshDrawCommand& command) override",
       "uint32_t GetSubMeshCount(uint32_t meshHandle) const override",
       "uint32_t LoadTexture(const std::string& path) override",
       "uint32_t LoadMesh(const std::string& path) override",
@@ -503,10 +517,21 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
     ]
   },
   {
+    "path": "DualityEngine/Include/DualityEngine/Renderer/RenderView.h",
+    "symbols": [
+      "DirectionalLightData",
+      "RenderView",
+      "MeshDrawCommand"
+    ]
+  },
+  {
     "path": "DualityEngine/Include/DualityEngine/Renderer/SceneRenderer.h",
     "symbols": [
       "void RenderScreen(IRenderer2D& renderer2D, IRenderer3D& renderer3D, Scene& scene, Screen screen, const glm::vec4& clearColor, bool clear = true)",
       "void RenderScreen3D(IRenderer3D& renderer, Scene& scene, Screen screen, const glm::vec4& clearColor, bool clear = true)",
+      "RenderView BuildRenderView(Scene& scene, Entity camera, Screen screen)",
+      "void PopulateMainDirectionalLight(Scene& scene, RenderView& view)",
+      "void RenderDirectionalBlobShadows(IRenderer3D& renderer, Scene& scene, Screen screen, const RenderView& view, const CameraComponent* cameraFilter = nullptr)",
       "AssetRef GetActiveSpriteTexture(Scene& scene, entt::entity handle)",
       "uint32_t ResolveSpriteTexture(IRenderer2D& renderer, const AssetRef& textureRef)",
       "uint32_t ResolveMeshTexture(IRenderer3D& renderer, const AssetRef& textureRef)",
@@ -614,6 +639,7 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
       "TransformComponent",
       "SpriteRendererComponent",
       "MeshRendererComponent",
+      "DirectionalLightComponent",
       "SpriteFlipbookComponent",
       "CameraComponent",
       "PhysicsRaycaster2DComponent",
