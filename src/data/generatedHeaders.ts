@@ -505,7 +505,7 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
   {
     "path": "DualityEngine/Include/DualityEngine/Renderer/SceneRenderer.h",
     "symbols": [
-      "void RenderScreen(IRenderer2D& renderer2D, IRenderer3D& renderer3D, Scene& scene, Screen screen, const glm::vec4& clearColor)",
+      "void RenderScreen(IRenderer2D& renderer2D, IRenderer3D& renderer3D, Scene& scene, Screen screen, const glm::vec4& clearColor, bool clear = true)",
       "void RenderScreen3D(IRenderer3D& renderer, Scene& scene, Screen screen, const glm::vec4& clearColor, bool clear = true)",
       "AssetRef GetActiveSpriteTexture(Scene& scene, entt::entity handle)",
       "uint32_t ResolveSpriteTexture(IRenderer2D& renderer, const AssetRef& textureRef)",
@@ -740,10 +740,20 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
   {
     "path": "DualityEngine/Include/DualityEngine/Scene/SceneManager.h",
     "symbols": [
+      "LoadSceneMode",
+      "SceneRequestType",
+      "SceneRequest",
       "SceneManager",
-      "static void RequestLoadScene(const std::string& assetsRelativePath)",
+      "static void RequestLoadScene(const std::string& assetsRelativePath, LoadSceneMode mode = LoadSceneMode::Single)",
+      "static void RequestLoadSceneAdditive(const std::string& assetsRelativePath)",
+      "static void RequestUnloadScene(const std::string& assetsRelativePath)",
+      "static void EnqueueLoadRequest(const std::string& assetsRelativePath, LoadSceneMode mode = LoadSceneMode::Single)",
+      "static void EnqueueUnloadRequest(const std::string& assetsRelativePath)",
+      "static bool HasPendingRequests()",
+      "static std::deque<SceneRequest> ConsumePendingRequests()",
       "static bool HasPendingLoad()",
-      "static std::string ConsumePendingLoad()"
+      "static std::string ConsumePendingLoad()",
+      "static void ClearPendingRequests()"
     ]
   },
   {
@@ -1032,6 +1042,9 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
     "path": "DualityEngine/Include/DualityEngine/Scripting/ScriptScene.h",
     "symbols": [
       "ScriptScene",
+      "static void LoadScene(const std::string& assetsRelativePath, LoadSceneMode mode = LoadSceneMode::Single)",
+      "static void LoadSceneAdditive(const std::string& assetsRelativePath)",
+      "static void UnloadScene(const std::string& assetsRelativePath)",
       "static Entity FindEntityInScreen(Screen screen, const std::string& name)",
       "static Entity FindEntityInTopScreen(const std::string& name)",
       "static Entity FindEntityInBottomScreen(const std::string& name)",

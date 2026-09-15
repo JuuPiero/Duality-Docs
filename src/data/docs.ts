@@ -418,6 +418,32 @@ export const docPages: DocPage[] = [
         ['Random crash after scene change', 'Audit C3D_TexDelete, linearFree and renderer cache clear order; never use a stale backend handle.']
       ] }
     ]
+  },
+  {
+    id: 'additive-scenes', group: 'Core runtime', title: 'Scene loading: Single, Additive and unload',
+    summary: 'Deferred, ordered scene transitions that keep a base world alive while overlay scenes update and render.',
+    tags: ['scene', 'scenemanager', 'additive', 'loadscene', 'unloadscene', 'runtime'],
+    blocks: [
+      { type: 'heading', text: 'Runtime contract' },
+      { type: 'paragraph', text: 'SceneManager is a deferred request API. A Behaviour may ask for a transition during OnUpdate, but the host consumes the ordered queue only after every loaded Scene finished that frame. This prevents the current callback from destroying its own Behaviour, Entity or physics world.' },
+      { type: 'paragraph', text: 'Tiếng Việt: SceneManager là API yêu cầu chuyển Scene theo kiểu trì hoãn. Behaviour có thể yêu cầu trong OnUpdate, nhưng host chỉ xử lý hàng đợi sau khi tất cả Scene đã chạy xong frame. Nhờ vậy callback hiện tại không thể tự hủy Behaviour, Entity hoặc physics world của chính nó.' },
+      { type: 'table', headers: ['Operation', 'Runtime result', 'Typical use'], rows: [
+        ['LoadScene(path, Single)', 'Stops and releases the base scene plus every additive scene, then starts path as the new base.', 'Level transition, returning to title scene.'],
+        ['LoadScene(path, Additive)', 'Deserializes and starts an independent Scene without stopping the current base. It updates and composites after previously loaded scenes.', 'HUD, transition overlay, streamed room or persistent service world.'],
+        ['UnloadScene(path)', 'Stops and removes the matching additive Scene. The base Scene is intentionally retained.', 'Close an overlay, remove a streamed room.'],
+        ['Several requests in one frame', 'Processed strictly in issuance order; no request overwrites another.', 'A transition coordinator issuing unload then additive load.']
+      ] },
+      { type: 'callout', tone: 'info', title: 'Rendering order', text: 'For each physical screen the base Scene clears once. Every additive Scene then renders with clear=false in load order, so later additive content appears above earlier scene content. Each Scene still applies its own cameras, culling masks, layers, sprite sort order and Canvas UI rules.' },
+      { type: 'heading', text: 'Gameplay API' },
+      { type: 'code', language: 'cpp', code: '#include <DualityEngine/Scripting/ScriptScene.h>\n\nusing namespace Duality;\n\n// Replace the full runtime scene set.\nScriptScene::LoadScene("Scenes/Level2.scene");\n\n// Keep the current gameplay scene and draw/update this overlay after it.\nScriptScene::LoadScene("Scenes/Hud.scene", LoadSceneMode::Additive);\n// Equivalent shorthand:\nScriptScene::LoadSceneAdditive("Scenes/Hud.scene");\n\n// Later, remove only the additive scene.\nScriptScene::UnloadScene("Scenes/Hud.scene");' },
+      { type: 'callout', tone: 'warning', title: 'Use ScriptScene in Behaviour code', text: 'On desktop, GameScripts is a hot-reloaded DLL. ScriptScene routes requests through EngineServices to the host-owned queue, so use ScriptScene::LoadScene/UnloadScene from a Behaviour. SceneManager remains the low-level runtime/host API and is also valid for engine code or tests.' },
+      { type: 'heading', text: 'Lifecycle, assets and editor behaviour' },
+      { type: 'list', items: ['Every successfully loaded additive scene receives OnRuntimeStart before its first update, then OnRuntimeStop exactly once when it is unloaded, a Single transition occurs, Play stops, scripts reload, or the application exits.', 'Additive scenes are runtime-only in the editor. The Hierarchy continues to edit the primary authored Scene; leaving Play restores its pre-Play snapshot and removes all runtime additive scenes.', 'The 3DS and desktop players resolve request paths beneath their own cooked/project Assets root. Add all runtime-loadable scenes to Build Settings so their serialized assets are cooked into romfs.', 'Do not unload textures/meshes merely because one additive scene closes: other scenes can share them. Backend caches are released for a true Single transition or renderer shutdown.', 'For 2D overlays, later additive scenes naturally composite on top. Cross-scene 3D depth/camera composition should be treated as separate camera passes; keep an overlay UI/2D unless the intended camera ownership is explicit.'] },
+      { type: 'heading', text: 'Design limits and safe patterns' },
+      { type: 'paragraph', text: 'An Entity handle belongs to exactly one Scene. Do not parent an Entity across scenes, cache an Entity from an unloadable scene in a persistent Behaviour, or pass raw component pointers between scenes. Use events, ScriptableObject data, GUID asset references, or a dedicated persistent service scene for cross-scene communication.' },
+      { type: 'paragraph', text: 'Tiếng Việt: Entity chỉ thuộc đúng một Scene. Không parent Entity giữa các Scene, không giữ Entity của Scene có thể unload trong Behaviour tồn tại lâu, và không truyền raw component pointer giữa các Scene. Hãy giao tiếp qua event, ScriptableObject, AssetRef GUID hoặc một service scene tồn tại lâu.' },
+      { type: 'callout', tone: 'success', title: 'Test coverage', text: 'The engine test suite verifies the ordered request mailbox, Single/Additive mode retention, Unload targets, queue consumption, and an additive request issued from a Behaviour through the scripting service bridge. Real players apply the same queue after their full runtime update and before rendering.' }
+    ]
   }
 ]
 
