@@ -2,6 +2,20 @@
 export type HeaderCatalogueItem = { path: string; symbols: string[] }
 export const headerCatalogue: HeaderCatalogueItem[] = [
   {
+    "path": "DualityEngine/Include/DualityEngine/Asset/AnimationClipLoader.h",
+    "symbols": [
+      "AnimationVec3Key",
+      "AnimationQuatKey",
+      "AnimationChannel",
+      "AnimationClipData",
+      "AnimationClipLoader",
+      "static const AnimationClipData& Load(const std::string& path)",
+      "static const AnimationChannel* FindChannel(const AnimationClipData& clip, const std::string& nodeName)",
+      "static glm::vec3 Sample(const std::vector<AnimationVec3Key>& keys, float time, const glm::vec3& fallback)",
+      "static glm::quat Sample(const std::vector<AnimationQuatKey>& keys, float time, const glm::quat& fallback)"
+    ]
+  },
+  {
     "path": "DualityEngine/Include/DualityEngine/Asset/AssetDatabase.h",
     "symbols": [
       "AssetDatabase",
@@ -45,6 +59,7 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
     "path": "DualityEngine/Include/DualityEngine/Asset/MeshLoader.h",
     "symbols": [
       "MeshData",
+      "Bone",
       "SubMesh",
       "MeshLoader",
       "static const MeshData& Load(const std::string& path)"
@@ -341,6 +356,7 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
   {
     "path": "DualityEngine/Include/DualityEngine/Renderer/IRenderer3D.h",
     "symbols": [
+      "MeshData",
       "IRenderer3D",
       "virtual void Init() = 0",
       "virtual void Shutdown() = 0",
@@ -355,6 +371,8 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
       "virtual uint32_t GetSubMeshCount(uint32_t meshHandle) const = 0",
       "virtual uint32_t LoadTexture(const std::string& path) = 0",
       "virtual uint32_t LoadMesh(const std::string& path) = 0",
+      "virtual uint32_t CreateDynamicMesh(const MeshData&)",
+      "virtual void UpdateDynamicMesh(uint32_t, const MeshData&)",
       "virtual void UnloadAllTextures() = 0",
       "virtual void UnloadAllMeshes() = 0",
       "virtual uint32_t GetDrawCallCount() const = 0"
@@ -411,6 +429,8 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
       "uint32_t GetSubMeshCount(uint32_t meshHandle) const override",
       "uint32_t LoadTexture(const std::string& path) override",
       "uint32_t LoadMesh(const std::string& path) override",
+      "uint32_t CreateDynamicMesh(const MeshData& mesh) override",
+      "void UpdateDynamicMesh(uint32_t meshHandle, const MeshData& mesh) override",
       "void UnloadAllTextures() override",
       "void UnloadAllMeshes() override",
       "uint32_t GetDrawCallCount() const override",
@@ -456,6 +476,7 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
       "void Unbind() const",
       "void SetVertexData(const void* data, size_t sizeBytes, int vertexCount)",
       "void AddFloatAttribute(int location, int componentCount, size_t stride, size_t offset)",
+      "void AddUnsignedByteAttribute(int location, int componentCount, size_t stride, size_t offset)",
       "int GetVertexCount() const",
       "void SetSubMeshes(std::vector<MeshData::SubMesh> subMeshes)",
       "const std::vector<MeshData::SubMesh>& GetSubMeshes() const"
@@ -501,6 +522,8 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
       "uint32_t GetSubMeshCount(uint32_t meshHandle) const override",
       "uint32_t LoadTexture(const std::string& path) override",
       "uint32_t LoadMesh(const std::string& path) override",
+      "uint32_t CreateDynamicMesh(const MeshData& mesh) override",
+      "void UpdateDynamicMesh(uint32_t meshHandle, const MeshData& mesh) override",
       "void UnloadAllTextures() override",
       "void UnloadAllMeshes() override",
       "uint32_t GetDrawCallCount() const override",
@@ -662,6 +685,8 @@ export const headerCatalogue: HeaderCatalogueItem[] = [
       "TransformComponent",
       "SpriteRendererComponent",
       "MeshRendererComponent",
+      "AnimationComponent",
+      "SkinnedMeshRendererComponent",
       "DirectionalLightComponent",
       "SpriteFlipbookComponent",
       "CameraComponent",
